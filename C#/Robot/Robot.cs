@@ -503,9 +503,9 @@ namespace Robot
             absolutePositionEstimator.OnOpenCvMatImageProcessedEvent += ConsoleCamera.DisplayOpenCvMatImage;
             if (usingYolo)
             {
-                yoloDetector.OnYoloImageProcessedAndLabelledEvent += ConsoleCamera.DisplayOpenCvMatImage;       //Event d'image processée et labelisée
                 absolutePositionEstimator.OnOpenCvMatImageProcessedEvent += yoloDetector.DetectAndLabel;        //On envoie l'image dewrapé dans le detecteur Yolo, et on effectu la detection avec les poids UTLN
-                yoloDetector.OnYoloImageProcessedAndLabelled_LabelEvent += ConsoleCamera.DisplayMessageInConsole;
+                yoloDetector.OnYoloImageProcessedAndLabelledEvent += ConsoleCamera.DisplayOpenCvMatImage;       //Event d'image processée et labelisée
+                yoloDetector.OnYoloImageProcessedAndLabelled_LabelEvent += ConsoleCamera.DisplayMessageInConsole;       //Permet d'afficher du txt dans la console camera
             }
            
         }

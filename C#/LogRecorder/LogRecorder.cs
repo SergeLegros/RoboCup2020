@@ -17,6 +17,7 @@ namespace LogRecorder
         private Thread logThread;
         private StreamWriter sw;
         private Queue<string> logQueue = new Queue<string>();
+        private Queue<Object> logQueueT = new Queue<Object>();
         public string logLock = "";
         JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
         DateTime initialDateTime;
@@ -35,6 +36,35 @@ namespace LogRecorder
             initialDateTime = DateTime.Now;
         }
 
+        //private void LogLoop()
+        //{
+        //    string currentFileName = "logFilePath_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".rbt";
+        //    sw = new StreamWriter(currentFileName, true);
+        //    sw.AutoFlush = true;
+        //    while (true)
+        //    {
+        //        while (logQueue.Count > 0)
+        //        {
+        //            string s = "";
+        //            lock (logLock) // get a lock on the queue
+        //            {
+        //                s = logQueue.Dequeue();
+        //            }
+        //            sw.WriteLine(s);
+
+        //            //Vérification de la taille du fichier
+        //            if (sw.BaseStream.Length > 90 * 1000000)
+        //            {
+        //                //On split le fichier
+        //                sw.Close();
+        //                currentFileName = "logFilePath_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".rbt";
+        //                sw = new StreamWriter(currentFileName, true);
+        //            }
+        //        }
+        //        Thread.Sleep(10);
+        //    }
+        //}
+
         private void LogLoop()
         {
             string currentFileName = "logFilePath_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".rbt";
@@ -42,14 +72,15 @@ namespace LogRecorder
             sw.AutoFlush = true;
             while (true)
             {
-                while (logQueue.Count > 0)
+                while (logQueueT.Count > 0)
                 {
-                    string s = "";
+                    object s;
                     lock (logLock) // get a lock on the queue
                     {
-                        s = logQueue.Dequeue();
+                        s = logQueueT.Dequeue();
                     }
-                    sw.WriteLine(s);
+                    WriteNext(sw.BaseStream, s);
+                    //sw.WriteLine(s);
 
                     //Vérification de la taille du fichier
                     if (sw.BaseStream.Length > 90 * 1000000)
@@ -63,11 +94,20 @@ namespace LogRecorder
                 Thread.Sleep(10);
             }
         }
+
         public void Log(string contents)
         {
             lock (logLock) // get a lock on the queue
             {
                 logQueue.Enqueue(contents);
+            }
+        }
+
+        public void Log<T>(T value)
+        {
+            lock(logLock)
+            {
+                logQueueT.Enqueue(value);
             }
         }
 
@@ -82,7 +122,7 @@ namespace LogRecorder
             //string json = JsonConvert.SerializeObject(data);
             //Log(json);
             //Methode 2
-            WriteNext(this.sw.BaseStream, data);
+            Log(data);
         }
 
         public void OnIMUDataReceived(object sender, IMUDataEventArgs e)
@@ -103,7 +143,7 @@ namespace LogRecorder
             //string json = JsonConvert.SerializeObject(data);
             //Log(json);
             //Methode 2
-            WriteNext(this.sw.BaseStream, data);
+            Log(data);
         }
 
         public void OnSpeedDataReceived(object sender, SpeedDataEventArgs e)
@@ -118,7 +158,7 @@ namespace LogRecorder
             //string json = JsonConvert.SerializeObject(data);
             //Log(json);
             //Methode 2
-            WriteNext(this.sw.BaseStream, data);
+            Log(data);
         }
 
         public void OnOpenCVMatImageReceived(object sender, OpenCvMatImageArgs e)
@@ -130,7 +170,7 @@ namespace LogRecorder
             //string json = JsonConvert.SerializeObject(data);
             //Log(json);
             //Methode 2
-            WriteNext(this.sw.BaseStream, data);
+            Log(data);
         }
 
 
