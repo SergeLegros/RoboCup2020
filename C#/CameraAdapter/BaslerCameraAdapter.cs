@@ -24,7 +24,27 @@ namespace CameraAdapter
             // Ask the camera finder for a list of camera devices.
             List<ICameraInfo> allCameras = CameraFinder.Enumerate();
 
-            camera = new Camera("40032798");
+            if(allCameras.Count>0)
+            {
+                //There is at least 1 camera
+                foreach(ICameraInfo camInf in allCameras)
+                {
+                    if(camInf[CameraInfoKey.SerialNumber]== "40032798")
+                    {
+                        DeviceAccessibilityInfo inf= CameraFinder.GetDeviceAccessibilityInfo(camInf);
+                        if(inf.HasFlag(DeviceAccessibilityInfo.Ok))
+                            camera = new Camera("40032798");
+                        else
+                        {
+                            if (inf.HasFlag(DeviceAccessibilityInfo.OpenedExclusively))
+                            {
+                                Console.WriteLine("Camera deja utilisé par un autre processus");
+                            }
+                        }
+                    }
+                }
+            }
+            
 
             if (camera != null)
             {

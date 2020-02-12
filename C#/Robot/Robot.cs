@@ -100,7 +100,7 @@ namespace Robot
         }
         #endregion
 
-        static RobotMode robotMode = RobotMode.Replay;
+        static RobotMode robotMode = RobotMode.Acquisition;
 
         static bool usingSimulatedCamera = true;
         static bool usingPhysicalSimulator = true;
@@ -110,7 +110,7 @@ namespace Robot
         static bool usingLogging = false;
         static bool usingLogReplay = false;
         static bool usingImageExtractor = true;     //Utilisé pour extraire des images du flux camera et les enregistrer en tant que JPG
-        static bool usingYolo = true;               //Permet de ne pas utiliser Yolo
+        static bool usingYolo = false;               //Permet de ne pas utiliser Yolo
 
 
         static bool usingRobotInterface = true;

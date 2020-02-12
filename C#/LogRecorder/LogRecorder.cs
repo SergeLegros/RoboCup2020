@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ProtoBuf;
 
 
 namespace LogRecorder
@@ -19,6 +20,11 @@ namespace LogRecorder
         public string logLock = "";
         JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
         DateTime initialDateTime;
+        // *** you need some mechanism to map types to fields
+        static readonly IDictionary<int, Type> typeLookup = new Dictionary<int, Type>
+        {
+            {1, typeof(RawLidarArgsLog)}, {2, typeof(SpeedDataEventArgsLog)}, {3, typeof(IMUDataEventArgsLog)}, {4, typeof(OpenCvMatImageArgsLog)}
+        };
 
         public LogRecorder()
         {
@@ -46,7 +52,7 @@ namespace LogRecorder
                     sw.WriteLine(s);
 
                     //Vérification de la taille du fichier
-                    if(sw.BaseStream.Length > 90*1000000)
+                    if (sw.BaseStream.Length > 90 * 1000000)
                     {
                         //On split le fichier
                         sw.Close();
@@ -58,7 +64,7 @@ namespace LogRecorder
             }
         }
         public void Log(string contents)
-        {            
+        {
             lock (logLock) // get a lock on the queue
             {
                 logQueue.Enqueue(contents);
@@ -71,8 +77,12 @@ namespace LogRecorder
             data.PtList = e.PtList;
             data.RobotId = e.RobotId;
             data.InstantInMs = DateTime.Now.Subtract(initialDateTime).TotalMilliseconds;
-            string json = JsonConvert.SerializeObject(data);
-            Log(json);
+
+            //Methode 1
+            //string json = JsonConvert.SerializeObject(data);
+            //Log(json);
+            //Methode 2
+            WriteNext(this.sw.BaseStream, data);
         }
 
         public void OnIMUDataReceived(object sender, IMUDataEventArgs e)
@@ -89,8 +99,11 @@ namespace LogRecorder
             data.magZ = e.magZ;
             data.EmbeddedTimeStampInMs = e.EmbeddedTimeStampInMs;
             data.InstantInMs = DateTime.Now.Subtract(initialDateTime).TotalMilliseconds;
-            string json = JsonConvert.SerializeObject(data);
-            Log(json);
+            //Methode 1
+            //string json = JsonConvert.SerializeObject(data);
+            //Log(json);
+            //Methode 2
+            WriteNext(this.sw.BaseStream, data);
         }
 
         public void OnSpeedDataReceived(object sender, SpeedDataEventArgs e)
@@ -102,8 +115,10 @@ namespace LogRecorder
             data.RobotId = e.RobotId;
             data.EmbeddedTimeStampInMs = e.EmbeddedTimeStampInMs;
             data.InstantInMs = DateTime.Now.Subtract(initialDateTime).TotalMilliseconds;
-            string json = JsonConvert.SerializeObject(data);
-            Log(json);
+            //string json = JsonConvert.SerializeObject(data);
+            //Log(json);
+            //Methode 2
+            WriteNext(this.sw.BaseStream, data);
         }
 
         public void OnOpenCVMatImageReceived(object sender, OpenCvMatImageArgs e)
@@ -112,31 +127,74 @@ namespace LogRecorder
             data.Mat = e.Mat;
             data.Descriptor = e.Descriptor;
             data.InstantInMs = DateTime.Now.Subtract(initialDateTime).TotalMilliseconds;
-            string json = JsonConvert.SerializeObject(data);
-            Log(json);
+            //string json = JsonConvert.SerializeObject(data);
+            //Log(json);
+            //Methode 2
+            WriteNext(this.sw.BaseStream, data);
+        }
+
+
+        static void WriteNext<T>(Stream stream, T value)
+        {
+            LogHeader header = new LogHeader()
+            {
+                Guid = Guid.NewGuid(),
+                Type = typeof(T)
+            };
+            Serializer.SerializeWithLengthPrefix<LogHeader>(stream, header, PrefixStyle.Base128);
+            Serializer.SerializeWithLengthPrefix<T>(stream, value, PrefixStyle.Base128);
         }
     }
 
+    [ProtoContract]
+    public class LogHeader
+    {
+        public LogHeader() { }
+
+        [ProtoMember(1, IsRequired = true)]
+        public Guid Guid { get; set; }
+
+        [ProtoIgnore]
+        public Type Type { get; set; }
+        [ProtoMember(2, IsRequired = true)]
+        public string TypeName
+        {
+            get { return this.Type.FullName; }
+            set { this.Type = Type.GetType(value); }
+        }
+    }
+
+    [ProtoContract]
     public class RawLidarArgsLog : RawLidarArgs
     {
+        [ProtoMember(1)]
         public string Type = "RawLidar";
+        [ProtoMember(2)]
         public double InstantInMs;
     }
 
+    [ProtoContract]
     public class SpeedDataEventArgsLog : SpeedDataEventArgs
     {
+        [ProtoMember(1)]
         public string Type = "SpeedFromOdometry";
+        [ProtoMember(2)]
         public double InstantInMs;
     }
-
+    [ProtoContract]
     public class IMUDataEventArgsLog : IMUDataEventArgs
     {
+        [ProtoMember(1)]
         public string Type = "ImuData";
+        [ProtoMember(2)]
         public double InstantInMs;
     }
+    [ProtoContract]
     public class OpenCvMatImageArgsLog : OpenCvMatImageArgs
     {
+        [ProtoMember(1)]
         public string Type = "CameraOmni";
+        [ProtoMember(2)]
         public double InstantInMs;
     }
 }

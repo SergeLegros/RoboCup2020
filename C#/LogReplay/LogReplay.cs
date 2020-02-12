@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Utilities;
+using ProtoBuf;
+using System.Reflection;
 
 namespace LogReplay
 {
@@ -22,7 +24,12 @@ namespace LogReplay
         private Queue<string> replayQueue = new Queue<string>();
         public string logLock = "";
         private bool filePathChanged = false;
-        
+        // *** you need some mechanism to map types to fields
+        static readonly IDictionary<int, Type> typeLookup = new Dictionary<int, Type>
+        {
+            {1, typeof(RawLidarArgsLog)}, {2, typeof(SpeedDataEventArgsLog)}, {3, typeof(IMUDataEventArgsLog)}, {4, typeof(OpenCvMatImageArgsLog)}
+        };
+
         string folderPath= @"C:\Github\RoboCup2020\C#\_Logs\";              //Emplacement du dossier logs (par defaut)
         string fileName= "logFilePath_2020-02-04_20-30-38.rbt";
         string filePath = "";
@@ -163,7 +170,7 @@ namespace LogReplay
             }
         }
 
-
+        double newReplayInstant = 0;
         private void ReplayLoop()
         {
             while (true)
@@ -175,60 +182,139 @@ namespace LogReplay
                 sr = new StreamReader(filePath);
                 OnFileNameChange(filePath);
 
-                using (JsonTextReader txtRdr = new JsonTextReader(sr))
+                //Methode utilisant JSon (lourd en process)
+                //using (JsonTextReader txtRdr = new JsonTextReader(sr))
+                //{
+                //    txtRdr.SupportMultipleContent = true;
+
+                //    while (txtRdr.Read())
+                //    {
+                //        _pauseEvent.WaitOne(Timeout.Infinite);
+                //        if (txtRdr.TokenType == JsonToken.StartObject)
+                //        {
+                //            //SpeedDataEventArgs speed=serializer.Deserialize<SpeedDataEventArgs>(txtRdr);
+                //            // Load each object from the stream and do something with it
+                //            JObject jObj = JObject.Load(txtRdr);
+                //            string objType = (string)jObj["Type"];
+                //            double newReplayInstant = (double)jObj["InstantInMs"];
+                //            if (LogDateTimeOffsetInMs == null)
+                //                LogDateTimeOffsetInMs = newReplayInstant;
+
+                //            //Tant que l'on a pas un nouvel echantillon, on attends
+                //            while (DateTime.Now.Subtract(initialDateTime).TotalMilliseconds + LogDateTimeOffsetInMs < ((newReplayInstant) * (1 / speedFactor)))
+                //            {
+                //                Thread.Sleep(10); //On bloque
+                //            }
+
+                //            switch (objType)
+                //            {
+                //                case "RawLidar":
+                //                    var currentLidarLog = jObj.ToObject<RawLidarArgsLog>();
+                //                    OnLidar(currentLidarLog.RobotId, currentLidarLog.PtList);
+                //                    break;
+                //                case "SpeedFromOdometry":
+                //                    var robotSpeedData = jObj.ToObject<SpeedDataEventArgsLog>();
+                //                    OnSpeedData(robotSpeedData);
+                //                    break;
+                //                case "ImuData":
+                //                    var ImuData = jObj.ToObject<IMUDataEventArgsLog>();
+                //                    OnIMU(ImuData);
+                //                    break;
+                //                case "CameraOmni":
+                //                    var cameraImage = jObj.ToObject<OpenCvMatImageArgsLog>();
+                //                    OnCameraImage(cameraImage);
+                //                    break;
+                //                default:
+                //                    Console.WriteLine("Log Replay : wrong type");
+                //                    break;
+                //            }
+                //        }
+
+                //        if (filePathChanged)
+                //        {
+                //            break;
+                //        }
+                //    }
+
+                //    if (RepeatReplayFile)
+                //    {
+                //        if (loopReplayFile)
+                //        {
+                //            if (fileIndexInList + 1 < filesNamesList.Count)
+                //            {
+                //                fileIndexInList++;
+                //                filePath = filesNamesList[fileIndexInList];
+                //            }
+                //            else
+                //            {
+                //                fileIndexInList = 0;
+                //                if (filesNamesList.Count > 0)
+                //                    filePath = filesNamesList[fileIndexInList];
+                //            }
+                //        }
+                //        else
+                //        {
+                //            if (filePathChanged)
+                //            {
+                //                filePathChanged = false;
+                //            }
+                //        }
+                //    }
+                //    else
+                //    {
+                //        if (loopReplayFile && !filePathChanged)
+                //        {
+                //            if (fileIndexInList + 1 < filesNamesList.Count)
+                //            {
+                //                fileIndexInList++;
+                //                filePath = filesNamesList[fileIndexInList];
+                //            }
+                //        }
+                //        else
+                //        {
+                //            if (filePathChanged)
+                //            {
+                //                filePathChanged = false;
+                //            }
+                //            else
+                //            {
+                //                _pauseEvent.Reset();          //Pause the Thread
+                //            }
+                //        }
+                //    }
+                //}
+
+                // Methode utilisant ProtoBuf (Fastest serializer)
+                object obj = ReadNext(sr.BaseStream);
+                while (obj != null)
                 {
-                    txtRdr.SupportMultipleContent = true;
-
-                    while (txtRdr.Read())
+                    _pauseEvent.WaitOne(Timeout.Infinite);
+                    Type objType = obj.GetType();
+                    switch (objType.ToString())
                     {
-                        _pauseEvent.WaitOne(Timeout.Infinite);
-                        if (txtRdr.TokenType == JsonToken.StartObject)
-                        {
-                            //SpeedDataEventArgs speed=serializer.Deserialize<SpeedDataEventArgs>(txtRdr);
-                            // Load each object from the stream and do something with it
-                            JObject obj = JObject.Load(txtRdr);
-                            string objType = (string)obj["Type"];
-                            double newReplayInstant = (double)obj["InstantInMs"];
-                            if (LogDateTimeOffsetInMs == null)
-                                LogDateTimeOffsetInMs = newReplayInstant;
-
-                            //Tant que l'on a pas un nouvel echantillon, on attends
-                            while (DateTime.Now.Subtract(initialDateTime).TotalMilliseconds + LogDateTimeOffsetInMs < ((newReplayInstant) * (1/speedFactor) ))
-                            {
-                                Thread.Sleep(10); //On bloque
-                            }
-
-                            switch (objType)
-                            {
-                                case "RawLidar":
-                                    var currentLidarLog = obj.ToObject<RawLidarArgsLog>();
-                                    OnLidar(currentLidarLog.RobotId, currentLidarLog.PtList);
-                                    break;
-                                case "SpeedFromOdometry":
-                                    var robotSpeedData = obj.ToObject<SpeedDataEventArgsLog>();
-                                    OnSpeedData(robotSpeedData);
-                                    break;
-                                case "ImuData":
-                                    var ImuData = obj.ToObject<IMUDataEventArgsLog>();
-                                    OnIMU(ImuData);
-                                    break;
-                                case "CameraOmni":
-                                    var cameraImage = obj.ToObject<OpenCvMatImageArgsLog>();
-                                    OnCameraImage(cameraImage);
-                                    break;
-                                default:
-                                    Console.WriteLine("Log Replay : wrong type");
-                                    break;
-                            }
-                        }
-
-                        if(filePathChanged)
-                        {
+                        case "RawLidarArgsLog":
+                            var currentLidarLog = (RawLidarArgsLog) obj;
+                            OnLidar(currentLidarLog.RobotId, currentLidarLog.PtList);
+                            newReplayInstant = currentLidarLog.InstantInMs;
                             break;
-                        }
+                    }
+                  
+                    if (LogDateTimeOffsetInMs == null)
+                        LogDateTimeOffsetInMs = newReplayInstant;
+
+                    //Tant que l'on a pas un nouvel echantillon, on attends
+                    while (DateTime.Now.Subtract(initialDateTime).TotalMilliseconds + LogDateTimeOffsetInMs < ((newReplayInstant) * (1 / speedFactor)))
+                    {
+                        Thread.Sleep(10); //On bloque
                     }
 
-                    if(RepeatReplayFile)
+                    if (filePathChanged)
+                    {
+                        break;
+                    }
+
+
+                    if (RepeatReplayFile)
                     {
                         if (loopReplayFile)
                         {
@@ -240,13 +326,16 @@ namespace LogReplay
                             else
                             {
                                 fileIndexInList = 0;
-                                if(filesNamesList.Count>0)
+                                if (filesNamesList.Count > 0)
                                     filePath = filesNamesList[fileIndexInList];
                             }
                         }
                         else
                         {
-                            
+                            if (filePathChanged)
+                            {
+                                filePathChanged = false;
+                            }
                         }
                     }
                     else
@@ -271,13 +360,22 @@ namespace LogReplay
                             }
                         }
                     }
+
+                    obj = ReadNext(sr.BaseStream);
                 }
                 sr.Close();
                 sr.Dispose();
             }
         }
 
-       
+        static object ReadNext(Stream stream)
+        {
+            LogHeader header;
+            header = Serializer.DeserializeWithLengthPrefix<LogHeader>(stream, PrefixStyle.Base128);
+            MethodInfo m = typeof(Serializer).GetMethod("DeserializeWithLengthPrefix",new Type[] { typeof(Stream), typeof(PrefixStyle) }).MakeGenericMethod(header.Type);
+            Object value = m.Invoke(null, new object[] { stream, PrefixStyle.Base128 });
+            return value;
+        }
 
         public delegate void SimulatedLidarEventHandler(object sender, RawLidarArgs e);
         public event EventHandler<RawLidarArgs> OnLidarEvent;

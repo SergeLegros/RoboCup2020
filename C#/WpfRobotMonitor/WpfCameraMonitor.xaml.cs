@@ -1,11 +1,13 @@
 ﻿using EventArgsLibrary;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
@@ -70,6 +72,7 @@ namespace RobotMonitor
         }
 
         BitmapImage Image1;
+        BitmapSource img1;
         BitmapImage Image2;
         BitmapImage Image3;
         BitmapImage Image4;
@@ -81,7 +84,11 @@ namespace RobotMonitor
             switch(descriptor)
             {
                 case "ImageFromCamera":
+                    var sw = new Stopwatch();
+                    sw.Start();
                     Image1 = BitmapToImageSource(image);
+                    sw.Stop();
+                    Console.WriteLine("BitmapToImageSource: " + sw.ElapsedMilliseconds);
                     break;
                 case "ImageDebug2":
                     Image2 = BitmapToImageSource(image);
@@ -151,6 +158,11 @@ namespace RobotMonitor
             {
                 imageCamera1.Source = Image1;
                 Image1 = null;
+            }
+            if (img1 != null)
+            {
+                imageCamera1.Source = img1;
+                img1 = null;
             }
             if (Image2 != null)
             {
