@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Utilities;
 using ProtoBuf;
 using System.Reflection;
+using MsgPack.Serialization;
 
 namespace LogReplay
 {
@@ -31,7 +32,8 @@ namespace LogReplay
         };
 
         string folderPath= @"C:\Github\RoboCup2020\C#\_Logs\";              //Emplacement du dossier logs (par defaut)
-        string fileName= "logFilePath_2020-02-04_20-30-38.rbt";
+        //string fileName= "logFilePath_2020-02-04_20-30-38.rbt";
+        string fileName = "logFilePath_2020-02-13_17-45-29_protobuf.rbt";
         string filePath = "";
         List<string> filesNamesList = new List<string>();
         int fileIndexInList = 0;
@@ -368,13 +370,21 @@ namespace LogReplay
             }
         }
 
+        //static object ReadNext(Stream stream)
+        //{
+        //    LogHeader header;
+        //    header = Serializer.DeserializeWithLengthPrefix<LogHeader>(stream, PrefixStyle.Base128);
+        //    MethodInfo m = typeof(Serializer).GetMethod("DeserializeWithLengthPrefix",new Type[] { typeof(Stream), typeof(PrefixStyle) }).MakeGenericMethod(header.Type);
+        //    Object value = m.Invoke(null, new object[] { stream, PrefixStyle.Base128 });
+        //    return value;
+        //}
+
         static object ReadNext(Stream stream)
         {
-            LogHeader header;
-            header = Serializer.DeserializeWithLengthPrefix<LogHeader>(stream, PrefixStyle.Base128);
-            MethodInfo m = typeof(Serializer).GetMethod("DeserializeWithLengthPrefix",new Type[] { typeof(Stream), typeof(PrefixStyle) }).MakeGenericMethod(header.Type);
-            Object value = m.Invoke(null, new object[] { stream, PrefixStyle.Base128 });
-            return value;
+            // Creates serializer.
+            var serializer = MessagePackSerializer.Get<object>();
+            //Unpack from stream.
+            return serializer.Unpack(stream);
         }
 
         public delegate void SimulatedLidarEventHandler(object sender, RawLidarArgs e);

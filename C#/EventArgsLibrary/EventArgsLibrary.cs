@@ -1,6 +1,7 @@
 ﻿using Emgu.CV;
 using HeatMap;
 using PerceptionManagement;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -30,9 +31,13 @@ namespace EventArgsLibrary
         public Bitmap ImageBmp { get; set; }
     }
 
+    [ProtoContract]
+    [ProtoInclude(502, typeof(OpenCvMatImageArgsLog))]
     public class OpenCvMatImageArgs : EventArgs
     {
+        [ProtoMember(1)]
         public Mat Mat { get; set; }
+        [ProtoMember(2)]
         public string Descriptor { get; set; }
         public void Dispose()
         {
@@ -58,34 +63,56 @@ namespace EventArgsLibrary
         public Int16 MsgPayloadLength { get; set; }
         public byte[] MsgPayload { get; set; }
     }
+
+    [ProtoContract]
+    [ProtoInclude(503, typeof(SpeedDataEventArgs))]
     public class SpeedConsigneArgs : EventArgs
     {
+        [ProtoMember(1)]
         public int RobotId { get; set; }
+        [ProtoMember(2)]
         public float Vx { get; set; }
+        [ProtoMember(3)]
         public float Vy { get; set; }
+        [ProtoMember(4)]
         public float Vtheta { get; set; }
     }
+
+    [ProtoContract]
     public class SpeedDataEventArgs : SpeedConsigneArgs
     {
+        [ProtoMember(1)]
         public uint EmbeddedTimeStampInMs;
     }
+
     public class TirEventArgs : EventArgs
     {
         public int RobotId { get; set; }
         public float Puissance { get; set; }
     }
 
+    [ProtoContract]
     public class IMUDataEventArgs : EventArgs
     {
+        [ProtoMember(1)]
         public uint EmbeddedTimeStampInMs;
+        [ProtoMember(2)]
         public double accelX;
+        [ProtoMember(3)]
         public double accelY;
+        [ProtoMember(4)]
         public double accelZ;
+        [ProtoMember(5)]
         public double gyrX;
+        [ProtoMember(6)]
         public double gyrY;
+        [ProtoMember(7)]
         public double gyrZ;
+        [ProtoMember(8)]
         public double magX;
+        [ProtoMember(9)]
         public double magY;
+        [ProtoMember(10)]
         public double magZ;
     }
     public class MotorsCurrentsEventArgs : EventArgs
@@ -214,14 +241,56 @@ namespace EventArgsLibrary
     {
         public GlobalWorldMap GlobalWorldMap { get; set; }
     }
+
+    [ProtoContract]
+    [ProtoInclude(501, typeof(RawLidarArgsLog))]
     public class RawLidarArgs : EventArgs
     {
+        [ProtoMember(1)]
         public int RobotId { get; set; }
+        [ProtoMember(2)]
         public List<PolarPoint> PtList { get; set; }
     }
+
     public class PolarPointListExtendedListArgs : EventArgs
     {
         public int RobotId { get; set; }
         public List<PolarPointListExtended> ObjectList { get; set; }
     }
+
+    [ProtoContract]
+    public class RawLidarArgsLog : RawLidarArgs
+    {
+        [ProtoMember(1)]
+        public string Type = "RawLidar";
+        [ProtoMember(2)]
+        public double InstantInMs;
+    }
+
+    [ProtoContract]
+    public class SpeedDataEventArgsLog : SpeedDataEventArgs
+    {
+        [ProtoMember(1)]
+        public string Type = "SpeedFromOdometry";
+        [ProtoMember(2)]
+        public double InstantInMs;
+    }
+    [ProtoContract]
+    public class IMUDataEventArgsLog : IMUDataEventArgs
+    {
+        [ProtoMember(1)]
+        public string Type = "ImuData";
+        [ProtoMember(2)]
+        public double InstantInMs;
+    }
+
+    [ProtoContract]
+    public class OpenCvMatImageArgsLog : OpenCvMatImageArgs
+    {
+        [ProtoMember(1)]
+        public string Type = "CameraOmni";
+        [ProtoMember(2)]
+        public double InstantInMs;
+    }
 }
+

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Shapes;
@@ -29,9 +30,12 @@ namespace Utilities
         }
     }
 
+    [ProtoContract]
     public class PolarPoint
     {
+        [ProtoMember(1)]
         public double Distance;
+        [ProtoMember(2)]
         public double Angle;
 
         public PolarPoint(double distance, double angle)

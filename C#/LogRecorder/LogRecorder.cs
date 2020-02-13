@@ -8,7 +8,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ProtoBuf;
-
+using ProtoBuf.Meta;
+using Emgu.CV;
+using System.Runtime.Serialization;
+using MsgPack.Serialization;
 
 namespace LogRecorder
 {
@@ -21,6 +24,8 @@ namespace LogRecorder
         public string logLock = "";
         JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
         DateTime initialDateTime;
+        
+        
         // *** you need some mechanism to map types to fields
         static readonly IDictionary<int, Type> typeLookup = new Dictionary<int, Type>
         {
@@ -34,6 +39,9 @@ namespace LogRecorder
             logThread.Name = "Logging Thread";
             logThread.Start();
             initialDateTime = DateTime.Now;
+            //RuntimeTypeModel.Default.Add(typeof(Mat), false).Add("Rows","Cols", "ElementSize", "Depth", "DataPointer");
+            RuntimeTypeModel.Default.Add(typeof(Array), true);
+            RuntimeTypeModel.Default.Add(typeof(Mat), true);
         }
 
         //private void LogLoop()
@@ -79,7 +87,23 @@ namespace LogRecorder
                     {
                         s = logQueueT.Dequeue();
                     }
-                    WriteNext(sw.BaseStream, s);
+
+                    //Using Protobuf
+                    //WriteNext(sw.BaseStream, s);
+                    //Using MsgPack
+                    // Creates serializer.
+                    Type typ= s.GetType();
+                    MessagePackSerializer serializer=null;
+                    if (typ.Name == "OpenCvMatImageArgsLog")
+                        serializer= MessagePackSerializer.Get<OpenCvMatImageArgsLog>();
+                    else if(typ.Name == "SpeedDataEventArgsLog")
+                        serializer= MessagePackSerializer.Get<SpeedDataEventArgsLog>();
+                    else if (typ.Name == "IMUDataEventArgsLog")
+                        serializer = MessagePackSerializer.Get<IMUDataEventArgsLog>();
+                    else if (typ.Name == "RawLidarArgsLog")
+                        serializer = MessagePackSerializer.Get<RawLidarArgsLog>();
+                    // Pack obj to stream.
+                    serializer.Pack(sw.BaseStream, s);
                     //sw.WriteLine(s);
 
                     //Vérification de la taille du fichier
@@ -105,7 +129,7 @@ namespace LogRecorder
 
         public void Log<T>(T value)
         {
-            lock(logLock)
+            lock (logLock)
             {
                 logQueueT.Enqueue(value);
             }
@@ -170,10 +194,11 @@ namespace LogRecorder
             //string json = JsonConvert.SerializeObject(data);
             //Log(json);
             //Methode 2
-            Log(data);
+            Log(data.Mat.d);
         }
 
 
+        //ProtoBuf
         static void WriteNext<T>(Stream stream, T value)
         {
             LogHeader header = new LogHeader()
@@ -203,38 +228,6 @@ namespace LogRecorder
             set { this.Type = Type.GetType(value); }
         }
     }
-
-    [ProtoContract]
-    public class RawLidarArgsLog : RawLidarArgs
-    {
-        [ProtoMember(1)]
-        public string Type = "RawLidar";
-        [ProtoMember(2)]
-        public double InstantInMs;
-    }
-
-    [ProtoContract]
-    public class SpeedDataEventArgsLog : SpeedDataEventArgs
-    {
-        [ProtoMember(1)]
-        public string Type = "SpeedFromOdometry";
-        [ProtoMember(2)]
-        public double InstantInMs;
-    }
-    [ProtoContract]
-    public class IMUDataEventArgsLog : IMUDataEventArgs
-    {
-        [ProtoMember(1)]
-        public string Type = "ImuData";
-        [ProtoMember(2)]
-        public double InstantInMs;
-    }
-    [ProtoContract]
-    public class OpenCvMatImageArgsLog : OpenCvMatImageArgs
-    {
-        [ProtoMember(1)]
-        public string Type = "CameraOmni";
-        [ProtoMember(2)]
-        public double InstantInMs;
-    }
 }
+
+    

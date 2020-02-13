@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,6 +34,10 @@ namespace ImageSaver
                 subdivision = 0;
                 string fileName = "Images/Omni_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss-fff") + ".jpg";
 
+                if(!Directory.Exists(@"Images\"))
+                {
+                    Directory.CreateDirectory(@"Images\");
+                }
                 // Create a Bitmap object based on a BMP file.
                 myBitmap = new Bitmap(e.Mat.Bitmap);
 
@@ -56,7 +61,9 @@ namespace ImageSaver
                 // Save the bitmap as a JPEG file with quality level 25.
                 myEncoderParameter = new EncoderParameter(myEncoder, 80L);
                 myEncoderParameters.Param[0] = myEncoderParameter;
+
                 myBitmap.Save(fileName, myImageCodecInfo, myEncoderParameters);
+
             }
         }
 

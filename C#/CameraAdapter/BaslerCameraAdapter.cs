@@ -4,6 +4,7 @@ using Emgu.CV.Structure;
 using EventArgsLibrary;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 
@@ -32,8 +33,20 @@ namespace CameraAdapter
                     if(camInf[CameraInfoKey.SerialNumber]== "40032798")
                     {
                         DeviceAccessibilityInfo inf= CameraFinder.GetDeviceAccessibilityInfo(camInf);
-                        if(inf.HasFlag(DeviceAccessibilityInfo.Ok))
+                        if (inf.HasFlag(DeviceAccessibilityInfo.Ok) || inf.HasFlag(DeviceAccessibilityInfo.Opened))
+                        {
                             camera = new Camera("40032798");
+                            if(inf.HasFlag(DeviceAccessibilityInfo.Opened))
+                            {
+                                //Process[] tab=Process.GetProcessesByName("conhost");
+
+                                //foreach(Process pro in tab)
+                                //{
+                                //    //pro.Kill();
+                                //}
+                                camera.Close();
+                            }
+                        }
                         else
                         {
                             if (inf.HasFlag(DeviceAccessibilityInfo.OpenedExclusively))
@@ -95,6 +108,7 @@ namespace CameraAdapter
         private void StreamGrabber_GrabStopped(object sender, GrabStopEventArgs e)
         {
             GrabOver = false;
+            //KeepShot();
         }
 
         private void Camera_ConnectionLost(object sender, EventArgs e)

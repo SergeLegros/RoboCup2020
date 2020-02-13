@@ -763,7 +763,8 @@ namespace WpfWorldMapDisplay
 
                 //dataSeries.Clear();
                 dataSeries.AcceptsUnsortedData = true;
-                dataSeries.Append(listX, listY);
+                if(listX.Count<double>()==listY.Count<double>())
+                    dataSeries.Append(listX, listY);
             }
             return dataSeries;
         }

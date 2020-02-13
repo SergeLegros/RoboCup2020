@@ -468,7 +468,7 @@ namespace Robot
                 ConsoleCamera.ShowDialog();
 
                 //Inutile mais debug pour l'instant
-                refBoxAdapter.OnRefereeBoxReceivedCommandEvent += ConsoleCamera.DisplayRefBoxCommand;
+             //   refBoxAdapter.OnRefereeBoxReceivedCommandEvent += ConsoleCamera.DisplayRefBoxCommand;
                 
             });
             t2.SetApartmentState(ApartmentState.STA);
@@ -526,7 +526,7 @@ namespace Robot
                 replayNavigator.OnSpeedChangeEvent += logReplay.ReplaySpeedChanged;
             }
 
-            imageProcessingPositionFromOmniCamera.OnOpenCvMatImageProcessedEvent += ConsoleCamera.DisplayOpenCvMatImage;
+            //imageProcessingPositionFromOmniCamera.OnOpenCvMatImageProcessedEvent += ConsoleCamera.DisplayOpenCvMatImage;
         }
 
         private static void RefBoxAdapter_DataReceivedEvent(object sender, EventArgsLibrary.DataReceivedArgs e)
