@@ -22,10 +22,57 @@ namespace PositionEstimator
             LidarPtList = e.PtList;
         }
 
-        public void AbsolutePositionEvaluation(object sender, OpenCvMatImageArgs e)
+        //public void AbsolutePositionEvaluation(object sender, OpenCvMatImageArgs e)
+        //{
+        //    //OnOpenCvMatImageProcessedReady(initialMat, "ImageFromCameraViaProcessing");
+        //    Mat sourceImage = e.Mat;
+        //    Mat panoramaImage;
+        //    var sw = new Stopwatch();
+        //    sw.Start();
+
+        //    //panoramaImage = FishEyeToPanorama2(e.Mat);
+        //    //OnOpenCvMatImageProcessedReady(panoramaImage, "ImageFromCameraViaProcessing");
+        //    //sw.Stop();
+        //    //Console.WriteLine("FishEyeToPano:" + sw.ElapsedMilliseconds);
+        //    //sw.Reset();
+        //    //sw.Start();
+        //    //panoramaImage = FishEyeToPanorama(e.Mat);
+        //    //OnOpenCvMatImageProcessedReady(panoramaImage, "ImageDebug3");
+        //    //sw.Stop();
+        //    //Console.WriteLine("FishEyeToPano2:" + sw.ElapsedMilliseconds);
+        //    //sw.Reset();
+        //    //sw.Start();
+        //    panoramaImage = FishEyeToPanorama3(e.Mat);              //Methode optimisée. A voir si on peux faire mieux avec les bons API EMGU
+        //    OnOpenCvMatImageProcessedReady(panoramaImage, "ImageDebug2");
+        //    sw.Stop();
+        //    Console.WriteLine("FishEyeToPano3:" + sw.ElapsedMilliseconds);
+        //    if (LidarPtList!=null)
+        //    {
+        //        //Recherche des blobs saillants
+
+        //        //Tri des blobs saillants par couleur et par taille et par distance 
+        //    }
+
+        //    ////Découpage de l'image
+        //    //int RawMatCroppedSize = 300;
+        //    //int cropOffsetX = 0;
+        //    //int cropOffsetY = 0;
+        //    //Range rgX = new Range(initialMat.Width / 2 - RawMatCroppedSize / 2 + cropOffsetX, initialMat.Width / 2 + RawMatCroppedSize / 2 + cropOffsetX);
+        //    //Range rgY = new Range(initialMat.Height / 2 - RawMatCroppedSize / 2 + cropOffsetY, initialMat.Height / 2 + RawMatCroppedSize / 2 + cropOffsetY);
+        //    //Mat RawMatCropped = new Mat(initialMat, rgY, rgX);
+
+        //    ////Conversion en HSV
+        //    //Mat HsvMatCropped = new Mat();
+        //    //CvInvoke.CvtColor(RawMatCropped, HsvMatCropped, ColorConversion.Bgr2Hsv);
+        //    //OnOpenCvMatImageProcessedReady(HsvMatCropped, "ImageDebug3");
+        //    //OnOpenCvMatImageProcessedReady(TerrainTheoriqueVertical, "ImageDebug4");
+        //}
+
+        public void AbsolutePositionEvaluation(object sender, BitmapImageArgs e)
         {
             //OnOpenCvMatImageProcessedReady(initialMat, "ImageFromCameraViaProcessing");
-            Mat sourceImage = e.Mat;
+            Image<Bgr, Byte> imageCV = new Image<Bgr, byte>(e.Bitmap); //Image Class from Emgu.CV
+            Mat sourceImage = imageCV.Mat;
             Mat panoramaImage;
             var sw = new Stopwatch();
             sw.Start();
@@ -42,11 +89,13 @@ namespace PositionEstimator
             //Console.WriteLine("FishEyeToPano2:" + sw.ElapsedMilliseconds);
             //sw.Reset();
             //sw.Start();
-            panoramaImage = FishEyeToPanorama3(e.Mat);              //Methode optimisée. A voir si on peux faire mieux avec les bons API EMGU
-            OnOpenCvMatImageProcessedReady(panoramaImage, "ImageDebug2");
+            panoramaImage = FishEyeToPanorama3(sourceImage);              //Methode optimisée. A voir si on peux faire mieux avec les bons API EMGU
+            
+            OnBitmapImageProcessedReady(panoramaImage.Bitmap, "ImageDebug2");
+            //OnOpenCvMatImageProcessedReady(panoramaImage, "ImageDebug2");
             sw.Stop();
             Console.WriteLine("FishEyeToPano3:" + sw.ElapsedMilliseconds);
-            if (LidarPtList!=null)
+            if (LidarPtList != null)
             {
                 //Recherche des blobs saillants
 
@@ -137,8 +186,10 @@ namespace PositionEstimator
         public Mat FishEyeToPanorama3(Mat originalMat)
         {
             byte[,,] data = (byte[,,])originalMat.GetData();
-            int originalWidth = originalMat.Cols;               //<--Couteux en temps
-            int originalHeight = originalMat.Rows;               //<--Couteux en temps
+            int originalWidth = originalMat.Cols;
+            int originalHeight = originalMat.Rows;
+            //int originalWidth = data.GetLength(1);              //originalMat.Cols            
+            //int originalHeight = data.GetLength(0);             //originalMat.Rows
 
             int RayonCercle = (int)(originalHeight / 2);
             int heightPanorama = RayonCercle * 2;
@@ -151,9 +202,9 @@ namespace PositionEstimator
             }
 
             //Parallelisation des boucles en utilisant une expression lambda
-            Parallel.For (0, widthPanorama,(i)=>
+            Parallel.For(0, widthPanorama,(i)=>
             {
-                for (int j = 0; j < heightPanorama; j++)
+                for (int j = 20; j < heightPanorama-20; j++)
                 {
                     int xPos = (int)(originalHeight / 2 + (heightPanorama - 1 - j) * cosRTab[i]);
                     int yPos = (int)(originalWidth / 2 + (heightPanorama - 1 - j) * sinRTab[i]);
@@ -203,15 +254,25 @@ namespace PositionEstimator
             }
         }
 
-        // Event image postprocessée
-        public event EventHandler<OpenCvMatImageArgs> OnOpenCvMatImageProcessedEvent;
+        //// Event image postprocessée
+        //public event EventHandler<OpenCvMatImageArgs> OnOpenCvMatImageProcessedEvent;
+        //public virtual void OnOpenCvMatImageProcessedReady(Mat mat, string descriptor)
+        //{
+        //    var handler = OnOpenCvMatImageProcessedEvent;
+        //    if (handler != null)
+        //    {
+        //        handler(this, new OpenCvMatImageArgs { Mat = mat, Descriptor = descriptor });
+        //    }
+        //}
 
-        public virtual void OnOpenCvMatImageProcessedReady(Mat mat, string descriptor)
+        public event EventHandler<BitmapImageArgs> OnBitmapImageProcessedEvent;
+        public virtual void OnBitmapImageProcessedReady(Bitmap image, string descriptor)
         {
-            var handler = OnOpenCvMatImageProcessedEvent;
+
+            var handler = OnBitmapImageProcessedEvent;
             if (handler != null)
             {
-                handler(this, new OpenCvMatImageArgs { Mat = mat, Descriptor = descriptor });
+                handler(this, new BitmapImageArgs { Bitmap = image, Descriptor = descriptor });
             }
         }
     }

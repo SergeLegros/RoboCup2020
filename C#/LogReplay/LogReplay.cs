@@ -28,7 +28,7 @@ namespace LogReplay
         // *** you need some mechanism to map types to fields
         static readonly IDictionary<int, Type> typeLookup = new Dictionary<int, Type>
         {
-            {1, typeof(RawLidarArgsLog)}, {2, typeof(SpeedDataEventArgsLog)}, {3, typeof(IMUDataEventArgsLog)}, {4, typeof(OpenCvMatImageArgsLog)}
+            {1, typeof(RawLidarArgsLog)}, {2, typeof(SpeedDataEventArgsLog)}, {3, typeof(IMUDataEventArgsLog)}, {4, typeof(BitmapImageArgsLog)}
         };
 
         string folderPath= @"C:\Github\RoboCup2020\C#\_Logs\";              //Emplacement du dossier logs (par defaut)
@@ -421,13 +421,13 @@ namespace LogReplay
         }
 
         //public delegate void SimulatedLidarEventHandler(object sender, RawLidarArgs e);
-        public event EventHandler<OpenCvMatImageArgsLog> OnCameraImageEvent;
-        public virtual void OnCameraImage(OpenCvMatImageArgsLog dat)
+        public event EventHandler<BitmapImageArgsLog> OnCameraImageEvent;
+        public virtual void OnCameraImage(BitmapImageArgsLog dat)
         {
             var handler = OnCameraImageEvent;
             if (handler != null)
             {
-                handler(this, new OpenCvMatImageArgsLog { Mat=dat.Mat, Descriptor= "ImageFromCamera"});
+                handler(this, new BitmapImageArgsLog { Bitmap=dat.Bitmap, Descriptor= "ImageFromCamera"});
                 }
         }
 

@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Windows.Forms;
+using System.Windows.Threading;
 
 namespace CameraAdapter
 {
@@ -32,13 +34,14 @@ namespace CameraAdapter
                 {
                     if(camInf[CameraInfoKey.SerialNumber]== "40032798")
                     {
+
                         DeviceAccessibilityInfo inf= CameraFinder.GetDeviceAccessibilityInfo(camInf);
                         if (inf.HasFlag(DeviceAccessibilityInfo.Ok) || inf.HasFlag(DeviceAccessibilityInfo.Opened))
                         {
                             camera = new Camera("40032798");
                             if(inf.HasFlag(DeviceAccessibilityInfo.Opened))
                             {
-                                //Process[] tab=Process.GetProcessesByName("conhost");
+                                Process[] tab=Process.GetProcessesByName("conhost");
 
                                 //foreach(Process pro in tab)
                                 //{
@@ -56,8 +59,7 @@ namespace CameraAdapter
                         }
                     }
                 }
-            }
-            
+            }            
 
             if (camera != null)
             {
@@ -65,12 +67,12 @@ namespace CameraAdapter
                 Console.WriteLine("Using camera {0}.", camera.CameraInfo[CameraInfoKey.ModelName]);
                 camera.CameraOpened += Configuration.AcquireContinuous;
                 camera.ConnectionLost += Camera_ConnectionLost;
+                camera.CameraClosed += Camera_CameraClosed;
                 camera.StreamGrabber.GrabStarted += StreamGrabber_GrabStarted;
                 camera.StreamGrabber.ImageGrabbed += StreamGrabber_ImageGrabbed;
                 camera.StreamGrabber.GrabStopped += StreamGrabber_GrabStopped;
 
-                camera.Open();
-                    
+                camera.Open();                    
 
                 camera.Parameters[PLCamera.GevSCPSPacketSize].SetValue(8192);       //Réglage du packet Size à 8192
                 camera.Parameters[PLCamera.GevSCPD].SetValue(10000);                //Réglage de l'inter packet delay à 10000
@@ -82,6 +84,12 @@ namespace CameraAdapter
                 //SetValue(PLCamera.AcquisitionMode.Continuous);
             KeepShot();
         }
+
+        private void Camera_CameraClosed(object sender, EventArgs e)
+        {
+            //pas utile pour nous
+        }
+
         private void StreamGrabber_GrabStarted(object sender, EventArgs e)
         {
             GrabOver = true;
@@ -89,17 +97,16 @@ namespace CameraAdapter
         private void StreamGrabber_ImageGrabbed(object sender, ImageGrabbedEventArgs e)
         {
             IGrabResult grabResult = e.GrabResult;
+
             if (grabResult.IsValid)
             {
                 if (GrabOver)
                 {
-                    var handler = OpenCvMatImageEvent;
+                    var handler = BitmapImageEvent;
                     if (handler != null)
                     {
                         Bitmap bitmap = GrabResult2Bmp(grabResult);
-                        Image<Bgr, Byte> imageCV = new Image<Bgr, byte>(bitmap); //Image Class from Emgu.CV
-                        Mat mat = imageCV.Mat;
-                        OnOpenCvMatImageReceived(mat);
+                        OnBitmapImageReceived(bitmap);
                     }
                 }
             }
@@ -108,7 +115,11 @@ namespace CameraAdapter
         private void StreamGrabber_GrabStopped(object sender, GrabStopEventArgs e)
         {
             GrabOver = false;
-            //KeepShot();
+            // If the grabbed stop due to an error, display the error message.
+            if (e.Reason != GrabStopReason.UserRequest)
+            {
+                MessageBox.Show("A grab error occured:\n" + e.ErrorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void Camera_ConnectionLost(object sender, EventArgs e)
@@ -176,18 +187,24 @@ namespace CameraAdapter
         //        handler(this, new CameraImageArgs { ImageBmp = image });
         //    }
         //}
-
-
-        public delegate void OpenCvMatImageEventHandler(object sender, CameraImageArgs e);
-        public event EventHandler<OpenCvMatImageArgs> OpenCvMatImageEvent;
-
-        public virtual void OnOpenCvMatImageReceived(Mat mat)
+        public event EventHandler<BitmapImageArgs> BitmapImageEvent;
+        public virtual void OnBitmapImageReceived(Bitmap bmp)
         {
-            var handler = OpenCvMatImageEvent;
+            var handler = BitmapImageEvent;
             if (handler != null)
             {
-                handler(this, new OpenCvMatImageArgs { Mat = mat , Descriptor= "ImageFromCamera"});
-                }
+                handler(this, new BitmapImageArgs { Bitmap = bmp, Descriptor = "ImageFromCamera" });
+            }
         }
+
+        //public event EventHandler<OpenCvMatImageArgs> OpenCvMatImageEvent;
+        //public virtual void OnOpenCvMatImageReceived(Mat mat)
+        //{
+        //    var handler = OpenCvMatImageEvent;
+        //    if (handler != null)
+        //    {
+        //        handler(this, new OpenCvMatImageArgs { Mat = mat , Descriptor= "ImageFromCamera"});
+        //        }
+        //}
     }
 }

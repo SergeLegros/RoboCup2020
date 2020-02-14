@@ -100,7 +100,7 @@ namespace Robot
         }
         #endregion
 
-        static RobotMode robotMode = RobotMode.Acquisition;
+        static RobotMode robotMode = RobotMode.Standard;
 
         static bool usingSimulatedCamera = true;
         static bool usingPhysicalSimulator = true;
@@ -129,7 +129,6 @@ namespace Robot
         static RobotMsgProcessor robotMsgProcessor;
         static RobotPilot.RobotPilot robotPilot;
         static BaslerCameraAdapter omniCamera;
-        static SimulatedCamera.SimulatedCamera omniCameraSimulator;
         static ImageProcessingPositionFromOmniCamera imageProcessingPositionFromOmniCamera;
         static AbsolutePositionEstimator absolutePositionEstimator;
         static PhysicalSimulator.PhysicalSimulator physicalSimulator;
@@ -238,29 +237,31 @@ namespace Robot
             if (usingCamera)
             {
                 omniCamera = new BaslerCameraAdapter();
-                omniCamera.CameraInit();     
-                omniCamera.OpenCvMatImageEvent += absolutePositionEstimator.AbsolutePositionEvaluation;
+                omniCamera.CameraInit();
+                //omniCamera.OpenCvMatImageEvent += absolutePositionEstimator.AbsolutePositionEvaluation;
+                omniCamera.BitmapImageEvent += absolutePositionEstimator.AbsolutePositionEvaluation;
             }
 
             if (usingImageExtractor && usingCamera)
             {
                 imgSaver = new ImageSaver.ImageSaver();
-                omniCamera.OpenCvMatImageEvent += imgSaver.OnSaveCVMatImage;
+                omniCamera.BitmapImageEvent += imgSaver.OnSaveBitmapImage;
             }
 
             if (usingYolo)
             {
-                yoloDetector = new YoloObjectDetector.YoloObjectDetector(true);            //Instancie un detecteur avec un Wrappeur Yolo utilisant le GPU
-                
+                yoloDetector = new YoloObjectDetector.YoloObjectDetector(false);            //Instancie un detecteur avec un Wrappeur Yolo utilisant le GPUif (usingYolo)
+                absolutePositionEstimator.OnBitmapImageProcessedEvent += yoloDetector.DetectAndLabel;        //On envoie l'image dewrappée dans le detecteur Yolo, et on effectue la detection avec les poids UTLN                
+                //yoloDetector.OnYoloImageProcessedAndLabelled_LabelEvent += TODO;       //Permet d'afficher du txt dans la console camera
             }
 
             //Démarrage des interface de visualisation
-            if (usingRobotInterface)
-                StartRobotInterface();
+            //if (usingRobotInterface)
+            //    StartRobotInterface();
             if (usingCameraInterface)
                 StartCameraInterface();
-            if (usingLogReplay)
-                StartReplayNavigatorInterface();
+            //if (usingLogReplay)
+            //    StartReplayNavigatorInterface();
 
             //Démarrage du logger si besoin
             if (usingLogging)
@@ -312,14 +313,14 @@ namespace Robot
                 lidar_OMD60M.OnLidarEvent += absolutePositionEstimator.OnRawLidarDataReceived; 
                 lidarProcessor.OnLidarProcessedEvent += localWorldMapManager.OnRawLidarDataReceived;
             }
-
+            
             //Events de recording
             if (usingLogging)
             {
                 lidar_OMD60M.OnLidarEvent += logRecorder.OnRawLidarDataReceived;
                 robotMsgProcessor.OnIMUDataFromRobotGeneratedEvent += logRecorder.OnIMUDataReceived;
                 robotMsgProcessor.OnSpeedDataFromRobotGeneratedEvent += logRecorder.OnSpeedDataReceived;
-                omniCamera.OpenCvMatImageEvent += logRecorder.OnOpenCVMatImageReceived;
+                omniCamera.BitmapImageEvent += logRecorder.OnBitmapImageReceived;
             }
 
             //Events de replay
@@ -465,15 +466,65 @@ namespace Robot
 
                 ConsoleCamera = new RobotMonitor.WpfCameraMonitor();
                 ConsoleCamera.Loaded += RegisterCameraInterfaceEvents;
+                ConsoleCamera.Closing += ConsoleCamera_Closing;
+                ConsoleCamera.Closed += ConsoleCamera_Closed;
                 ConsoleCamera.ShowDialog();
 
                 //Inutile mais debug pour l'instant
-             //   refBoxAdapter.OnRefereeBoxReceivedCommandEvent += ConsoleCamera.DisplayRefBoxCommand;
-                
+                //   refBoxAdapter.OnRefereeBoxReceivedCommandEvent += ConsoleCamera.DisplayRefBoxCommand;
+                return;
             });
             t2.SetApartmentState(ApartmentState.STA);
             t2.Start();
         }
+
+        private static void ConsoleCamera_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+
+                if (usingCamera || usingLogging)
+                    omniCamera.BitmapImageEvent -= ConsoleCamera.DisplayBitmapImage;
+
+                if (usingLogReplay)
+                {
+                    //logReplay.OnCameraImageEvent += ConsoleCamera.DisplayOpenCvMatImage;                
+                }
+                absolutePositionEstimator.OnBitmapImageProcessedEvent -= ConsoleCamera.DisplayBitmapImage;
+                if (usingYolo)
+                {
+                    //absolutePositionEstimator.OnBitmapImageProcessedEvent += yoloDetector.DetectAndLabel;        //On envoie l'image dewrappée dans le detecteur Yolo, et on effectue la detection avec les poids UTLN
+                    yoloDetector.OnYoloBitmapImageProcessedAndLabelledEvent -= ConsoleCamera.DisplayBitmapImage;       //Event d'image processée et labelisée
+                    yoloDetector.OnYoloImageProcessedAndLabelled_LabelEvent -= ConsoleCamera.DisplayMessageInConsole;       //Permet d'afficher du txt dans la console camera
+                }
+            
+        }
+
+        private static void ConsoleCamera_Closed(object sender, EventArgs e)
+        {
+
+        }
+
+        static void RegisterCameraInterfaceEvents(object sender, EventArgs e)
+        {
+            if (usingCamera || usingLogging)
+                omniCamera.BitmapImageEvent += ConsoleCamera.DisplayBitmapImage;
+                //omniCamera.OpenCvMatImageEvent += ConsoleCamera.DisplayOpenCvMatImage;
+
+            if (usingLogReplay)
+            {
+                //logReplay.OnCameraImageEvent += ConsoleCamera.DisplayOpenCvMatImage;                
+            }
+            absolutePositionEstimator.OnBitmapImageProcessedEvent += ConsoleCamera.DisplayBitmapImage;
+            if (usingYolo)
+            {
+                //absolutePositionEstimator.OnBitmapImageProcessedEvent += yoloDetector.DetectAndLabel;        //On envoie l'image dewrappée dans le detecteur Yolo, et on effectue la detection avec les poids UTLN
+                yoloDetector.OnYoloBitmapImageProcessedAndLabelledEvent += ConsoleCamera.DisplayBitmapImage;       //Event d'image processée et labelisée
+                yoloDetector.OnYoloImageProcessedAndLabelled_LabelEvent += ConsoleCamera.DisplayMessageInConsole;       //Permet d'afficher du txt dans la console camera
+            }
+           
+        }
+
+
+
         static Thread t3;
         static void StartReplayNavigatorInterface()
         {
@@ -488,26 +539,6 @@ namespace Robot
             });
             t3.SetApartmentState(ApartmentState.STA);
             t3.Start();
-        }
-
-        static void RegisterCameraInterfaceEvents(object sender, EventArgs e)
-        {
-            if (usingLogging)
-                omniCamera.OpenCvMatImageEvent += ConsoleCamera.DisplayOpenCvMatImage;
-
-            if (usingLogReplay)
-            {
-                logReplay.OnCameraImageEvent += ConsoleCamera.DisplayOpenCvMatImage;
-                
-            }
-            absolutePositionEstimator.OnOpenCvMatImageProcessedEvent += ConsoleCamera.DisplayOpenCvMatImage;
-            if (usingYolo)
-            {
-                absolutePositionEstimator.OnOpenCvMatImageProcessedEvent += yoloDetector.DetectAndLabel;        //On envoie l'image dewrapé dans le detecteur Yolo, et on effectu la detection avec les poids UTLN
-                yoloDetector.OnYoloImageProcessedAndLabelledEvent += ConsoleCamera.DisplayOpenCvMatImage;       //Event d'image processée et labelisée
-                yoloDetector.OnYoloImageProcessedAndLabelled_LabelEvent += ConsoleCamera.DisplayMessageInConsole;       //Permet d'afficher du txt dans la console camera
-            }
-           
         }
 
         static void RegisterReplayInterfaceEvents(object sender, EventArgs e)
@@ -525,8 +556,6 @@ namespace Robot
                 replayNavigator.OnOpenFolderEvent += logReplay.OpenReplayFolder;
                 replayNavigator.OnSpeedChangeEvent += logReplay.ReplaySpeedChanged;
             }
-
-            //imageProcessingPositionFromOmniCamera.OnOpenCvMatImageProcessedEvent += ConsoleCamera.DisplayOpenCvMatImage;
         }
 
         private static void RefBoxAdapter_DataReceivedEvent(object sender, EventArgsLibrary.DataReceivedArgs e)

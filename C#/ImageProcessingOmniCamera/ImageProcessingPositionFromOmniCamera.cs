@@ -103,28 +103,7 @@ namespace ImageProcessingOmniCamera
             Image<Bgr, Byte> im =outMat.ToImage<Bgr,Byte>();
             return im.Mat;
         }
-        public void ProcessOpenCvMatImage(object sender, EventArgsLibrary.OpenCvMatImageArgs e)
-        {
-            Mat initialMat = e.Mat;
-            //OnOpenCvMatImageProcessedReady(initialMat, "ImageFromCameraViaProcessing");
-
-            var panoramaImage = FishEyeToPanorama2(e.Mat);
-            OnOpenCvMatImageProcessedReady(panoramaImage, "ImageFromCameraViaProcessing");
-
-            ////Découpage de l'image
-            //int RawMatCroppedSize = 300;
-            //int cropOffsetX = 0;
-            //int cropOffsetY = 0;
-            //Range rgX = new Range(initialMat.Width / 2 - RawMatCroppedSize / 2 + cropOffsetX, initialMat.Width / 2 + RawMatCroppedSize / 2 + cropOffsetX);
-            //Range rgY = new Range(initialMat.Height / 2 - RawMatCroppedSize / 2 + cropOffsetY, initialMat.Height / 2 + RawMatCroppedSize / 2 + cropOffsetY);
-            //Mat RawMatCropped = new Mat(initialMat, rgY, rgX);
-
-            ////Conversion en HSV
-            //Mat HsvMatCropped = new Mat();
-            //CvInvoke.CvtColor(RawMatCropped, HsvMatCropped, ColorConversion.Bgr2Hsv);
-            //OnOpenCvMatImageProcessedReady(HsvMatCropped, "ImageDebug3");
-            //OnOpenCvMatImageProcessedReady(TerrainTheoriqueVertical, "ImageDebug4");
-        }
+        
 
         private void CalculatePositioning(Mat RawMat, out Mat RawMatCropped, out Mat OtherZonesInGreen, out Mat TerrainFilledGreenRotated, out Mat TerrainTheoriqueDisplay, out double coefficientCorrelation)
         {
@@ -457,16 +436,16 @@ namespace ImageProcessingOmniCamera
             }
         }
 
-        // Event image postprocessée
-        public event EventHandler<OpenCvMatImageArgs> OnOpenCvMatImageProcessedEvent;
+        //// Event image postprocessée
+        //public event EventHandler<OpenCvMatImageArgs> OnOpenCvMatImageProcessedEvent;
 
-        public virtual void OnOpenCvMatImageProcessedReady(Mat mat, string descriptor)
-        {
-            var handler = OnOpenCvMatImageProcessedEvent;
-            if (handler != null)
-            {
-                handler(this, new OpenCvMatImageArgs { Mat = mat, Descriptor = descriptor });
-            }
-        }
+        //public virtual void OnOpenCvMatImageProcessedReady(Mat mat, string descriptor)
+        //{
+        //    var handler = OnOpenCvMatImageProcessedEvent;
+        //    if (handler != null)
+        //    {
+        //        handler(this, new OpenCvMatImageArgs { Mat = mat, Descriptor = descriptor });
+        //    }
+        //}
     }
 }

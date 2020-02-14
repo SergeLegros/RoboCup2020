@@ -135,10 +135,6 @@
       <Project>{4012F5AF-50E3-40BD-ABF0-4AFE3F30D5E3}</Project>
       <Name>RobotPilot</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SimulatedCamera\SimulatedCamera.csproj">
-      <Project>{57F578BF-38FA-4A86-844A-EECAFACC2412}</Project>
-      <Name>SimulatedCamera</Name>
-    </ProjectReference>
     <ProjectReference Include="..\StrategyManager\StrategyManager.csproj">
       <Project>{F2D3FB95-F97A-4049-BCA4-71854FD4FAF3}</Project>
       <Name>StrategyManager</Name>

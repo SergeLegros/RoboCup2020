@@ -42,7 +42,7 @@ namespace RobotMonitor
             nbMsgReceivedErrors += 1;
         }
 
-        //Methode appelée sur evenement (event) provenant du port Serie.
+        //Methode appelée sur evenement (event) provenant de Yolo ou ailleur.
         //Cette methode est donc appelée depuis le thread du port Serie. Ce qui peut poser des problemes d'acces inter-thread
         public void DisplayMessageInConsole(object sender, StringEventArgs e)
         {
@@ -51,7 +51,7 @@ namespace RobotMonitor
             //Sachant que chaque objet UI (d'interface graphique) dispose d'un dispatcher qui permet d'executer un delegué (une methode) depuis son propre thread.
             //La difference entre un Invoke et un beginInvoke est le fait que le Invoke attend la fin de l'execution de l'action avant de sortir.
             //Utilisation ici d'une methode anonyme
-            textBoxDebug.Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(delegate ()
+            textBoxDebug.Dispatcher.BeginInvoke(DispatcherPriority.Render, new Action(delegate ()
             {
 
                     textBoxDebug.Text += e.value;
@@ -70,37 +70,81 @@ namespace RobotMonitor
                 RefBoxEventQueue.Enqueue(e.Value);
             }
         }
+        
+        //BitmapImage Image1;
+        //BitmapSource img1;
+        //BitmapImage Image2;
+        //BitmapImage Image3;
+        //BitmapImage Image4;
+        //public void DisplayOpenCvMatImage(object sender, EventArgsLibrary.OpenCvMatImageArgs e)
+        //{
+        //    var image = e.Mat.Bitmap;
+        //    string descriptor = e.Descriptor;
 
-        BitmapImage Image1;
-        BitmapSource img1;
-        BitmapImage Image2;
-        BitmapImage Image3;
-        BitmapImage Image4;
-        public void DisplayOpenCvMatImage(object sender, EventArgsLibrary.OpenCvMatImageArgs e)
+        //    switch(descriptor)
+        //    {
+        //        case "ImageFromCamera":
+        //            sw.Start();
+        //            //BitmapImage bitmapImageOld = Image1 as BitmapImage;
+        //            imageCamera1.Source = BitmapToImageSource(image);
+        //            sw.Stop();
+        //            Console.WriteLine("BitmapToImageSource: " + sw.ElapsedMilliseconds);
+        //            break;
+        //        case "ImageDebug2":
+        //            Image2 = BitmapToImageSource(image);
+        //            break;
+        //        case "ImageDebug3":
+        //            Image3 = BitmapToImageSource(image);
+        //            break;
+        //        case "ImageDebug4":
+        //            Image4 = BitmapToImageSource(image);
+        //            break;
+        //        default:
+        //            Image4 = BitmapToImageSource(image);
+        //            break;
+        //    }
+        //}
+
+        Stopwatch sw = new Stopwatch();
+        public void DisplayBitmapImage(object sender, EventArgsLibrary.BitmapImageArgs e)
         {
-            var image = e.Mat.Bitmap;
+            if (!Dispatcher.CheckAccess())
+            {
+
+                Dispatcher.BeginInvoke(new Action(delegate ()
+                {
+                    DisplayBitmapImage(sender, e);
+                }));
+
+                return;
+            }
+
+            var image = e.Bitmap;
             string descriptor = e.Descriptor;
 
-            switch(descriptor)
+            switch (descriptor)
             {
                 case "ImageFromCamera":
-                    var sw = new Stopwatch();
-                    sw.Start();
-                    Image1 = BitmapToImageSource(image);
+                    sw.Restart();
+                    //imageCamera1.Source.Dispatcher.Invoke(() => imageCamera1.Source = BitmapToImageSource(image));
+                    imageCamera1.Source = BitmapToImageSource(image);
+                    //imageCamera1.Source = BitmapToImageSource(image);
+                    //imageCamera1.Source = Image1;
+                    //Image1 = null;
                     sw.Stop();
                     Console.WriteLine("BitmapToImageSource: " + sw.ElapsedMilliseconds);
                     break;
                 case "ImageDebug2":
-                    Image2 = BitmapToImageSource(image);
+                    imageCamera2.Source = BitmapToImageSource(image);
                     break;
                 case "ImageDebug3":
-                    Image3 = BitmapToImageSource(image);
+                    imageCamera3.Source = BitmapToImageSource(image);
                     break;
                 case "ImageDebug4":
-                    Image4 = BitmapToImageSource(image);
+                    imageCamera4.Source = BitmapToImageSource(image);
                     break;
                 default:
-                    Image4 = BitmapToImageSource(image);
+                    imageCamera4.Source = BitmapToImageSource(image);
                     break;
             }
 
@@ -109,16 +153,17 @@ namespace RobotMonitor
         private BitmapImage BitmapToImageSource(Bitmap sourceImage)
         {
             var copyImage = CopyImage(sourceImage);
-            MemoryStream memory = new MemoryStream();
-            copyImage.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
-            memory.Seek(0, SeekOrigin.Begin);
+            MemoryStream ms = new MemoryStream();
+            copyImage.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+            ms.Seek(0, SeekOrigin.Begin);
 
             BitmapImage bitmapimage = new BitmapImage();
             bitmapimage.BeginInit();
-            bitmapimage.StreamSource = memory;
+            bitmapimage.StreamSource = ms;
             bitmapimage.EndInit();
 
             bitmapimage.Freeze();
+            //ms.Dispose();
             return bitmapimage;
         }
 
@@ -147,38 +192,38 @@ namespace RobotMonitor
 
         private void TimerAffichage_Tick(object sender, EventArgs e)
         {
-            //textBoxDebug.Text = "Nb Message Sent : " + nbMsgSent + " Nb Message Received : " + nbMsgReceived + " Nb Message Received Errors : " + nbMsgReceivedErrors;
-            lock(RefBoxEventQueue)
-            {
-                for(int i=0; i< RefBoxEventQueue.Count; i++)
-                    textBoxDebug.Text += RefBoxEventQueue.Dequeue()+" ";
-            }
+            ////textBoxDebug.Text = "Nb Message Sent : " + nbMsgSent + " Nb Message Received : " + nbMsgReceived + " Nb Message Received Errors : " + nbMsgReceivedErrors;
+            //lock(RefBoxEventQueue)
+            //{
+            //    for(int i=0; i< RefBoxEventQueue.Count; i++)
+            //        textBoxDebug.Text += RefBoxEventQueue.Dequeue()+" ";
+            //}
 
-            if (Image1 != null)
-            {
-                imageCamera1.Source = Image1;
-                Image1 = null;
-            }
-            if (img1 != null)
-            {
-                imageCamera1.Source = img1;
-                img1 = null;
-            }
-            if (Image2 != null)
-            {
-                imageCamera2.Source = Image2;
-                Image2 = null;
-            }
-            if (Image3 != null)
-            {
-                imageCamera3.Source = Image3;
-                Image3 = null;
-            }
-            if (Image4 != null)
-            {
-                imageCamera4.Source = Image4;
-                Image4 = null;
-            }
+            //if (Image1 != null)
+            //{
+            //    imageCamera1.Source = Image1;
+            //    Image1 = null;
+            //}
+            //if (img1 != null)
+            //{
+            //    imageCamera1.Source = img1;
+            //    img1 = null;
+            //}
+            //if (Image2 != null)
+            //{
+            //    imageCamera2.Source = Image2;
+            //    Image2 = null;
+            //}
+            //if (Image3 != null)
+            //{
+            //    imageCamera3.Source = Image3;
+            //    Image3 = null;
+            //}
+            //if (Image4 != null)
+            //{
+            //    imageCamera4.Source = Image4;
+            //    Image4 = null;
+            //}
         }
     }
 }

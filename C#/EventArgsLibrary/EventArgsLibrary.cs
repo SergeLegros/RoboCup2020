@@ -26,24 +26,25 @@ namespace EventArgsLibrary
     {
         public double Value { get; set; }
     }
-    public class CameraImageArgs : EventArgs
+    public class BitmapImageArgs : EventArgs
     {
-        public Bitmap ImageBmp { get; set; }
+        public Bitmap Bitmap { get; set; }
+        public string Descriptor { get; set; }
     }
 
-    [ProtoContract]
-    [ProtoInclude(502, typeof(OpenCvMatImageArgsLog))]
-    public class OpenCvMatImageArgs : EventArgs
-    {
-        [ProtoMember(1)]
-        public Mat Mat { get; set; }
-        [ProtoMember(2)]
-        public string Descriptor { get; set; }
-        public void Dispose()
-        {
-            Mat.Dispose();
-        }
-    }
+    //[ProtoContract]
+    //[ProtoInclude(502, typeof(OpenCvMatImageArgsLog))]
+    //public class OpenCvMatImageArgs : EventArgs
+    //{
+    //    [ProtoMember(1)]
+    //    public Mat Mat { get; set; }
+    //    [ProtoMember(2)]
+    //    public string Descriptor { get; set; }
+    //    public void Dispose()
+    //    {
+    //        Mat.Dispose();
+    //    }
+    //}
 
     public class MessageDecodedArgs : EventArgs
     {
@@ -284,8 +285,17 @@ namespace EventArgsLibrary
         public double InstantInMs;
     }
 
+    //[ProtoContract]
+    //public class OpenCvMatImageArgsLog : OpenCvMatImageArgs
+    //{
+    //    [ProtoMember(1)]
+    //    public string Type = "CameraOmni";
+    //    [ProtoMember(2)]
+    //    public double InstantInMs;
+    //}
+
     [ProtoContract]
-    public class OpenCvMatImageArgsLog : OpenCvMatImageArgs
+    public class BitmapImageArgsLog : BitmapImageArgs
     {
         [ProtoMember(1)]
         public string Type = "CameraOmni";

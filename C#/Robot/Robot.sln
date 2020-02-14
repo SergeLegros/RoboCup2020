@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.960
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robot", "Robot.csproj", "{F48FF3AC-50C6-4016-8F67-F5430FED1A2C}"
 EndProject
@@ -30,8 +30,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageDecoder", "..\MessageDecoder\MessageDecoder.csproj", "{4603885F-CC5E-43E5-A4AF-063030CB0A32}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageEncoder", "..\MessageEncoder\MessageEncoder.csproj", "{EFAFBA95-1787-41A9-8F12-14ECD9FE127A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimulatedCamera", "..\SimulatedCamera\SimulatedCamera.csproj", "{57F578BF-38FA-4A86-844A-EECAFACC2412}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfRobotInterface", "..\RobotInterfaceWPF_Supervision_Systeme_Embarqué\RobotInterface\WpfRobotInterface.csproj", "{1CDC0611-A2E5-42E8-A28B-BA4269343C68}"
 EndProject
@@ -215,14 +213,6 @@ Global
 		{EFAFBA95-1787-41A9-8F12-14ECD9FE127A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EFAFBA95-1787-41A9-8F12-14ECD9FE127A}.Release|x64.ActiveCfg = Release|x64
 		{EFAFBA95-1787-41A9-8F12-14ECD9FE127A}.Release|x64.Build.0 = Release|x64
-		{57F578BF-38FA-4A86-844A-EECAFACC2412}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{57F578BF-38FA-4A86-844A-EECAFACC2412}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{57F578BF-38FA-4A86-844A-EECAFACC2412}.Debug|x64.ActiveCfg = Debug|x64
-		{57F578BF-38FA-4A86-844A-EECAFACC2412}.Debug|x64.Build.0 = Debug|x64
-		{57F578BF-38FA-4A86-844A-EECAFACC2412}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{57F578BF-38FA-4A86-844A-EECAFACC2412}.Release|Any CPU.Build.0 = Release|Any CPU
-		{57F578BF-38FA-4A86-844A-EECAFACC2412}.Release|x64.ActiveCfg = Release|x64
-		{57F578BF-38FA-4A86-844A-EECAFACC2412}.Release|x64.Build.0 = Release|x64
 		{1CDC0611-A2E5-42E8-A28B-BA4269343C68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1CDC0611-A2E5-42E8-A28B-BA4269343C68}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1CDC0611-A2E5-42E8-A28B-BA4269343C68}.Debug|x64.ActiveCfg = Debug|x64

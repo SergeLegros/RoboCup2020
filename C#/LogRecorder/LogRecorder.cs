@@ -29,7 +29,7 @@ namespace LogRecorder
         // *** you need some mechanism to map types to fields
         static readonly IDictionary<int, Type> typeLookup = new Dictionary<int, Type>
         {
-            {1, typeof(RawLidarArgsLog)}, {2, typeof(SpeedDataEventArgsLog)}, {3, typeof(IMUDataEventArgsLog)}, {4, typeof(OpenCvMatImageArgsLog)}
+            {1, typeof(RawLidarArgsLog)}, {2, typeof(SpeedDataEventArgsLog)}, {3, typeof(IMUDataEventArgsLog)}, {4, typeof(BitmapImageArgsLog)}
         };
 
         public LogRecorder()
@@ -95,7 +95,7 @@ namespace LogRecorder
                     Type typ= s.GetType();
                     MessagePackSerializer serializer=null;
                     if (typ.Name == "OpenCvMatImageArgsLog")
-                        serializer= MessagePackSerializer.Get<OpenCvMatImageArgsLog>();
+                        serializer= MessagePackSerializer.Get<BitmapImageArgsLog>();
                     else if(typ.Name == "SpeedDataEventArgsLog")
                         serializer= MessagePackSerializer.Get<SpeedDataEventArgsLog>();
                     else if (typ.Name == "IMUDataEventArgsLog")
@@ -185,16 +185,16 @@ namespace LogRecorder
             Log(data);
         }
 
-        public void OnOpenCVMatImageReceived(object sender, OpenCvMatImageArgs e)
+        public void OnBitmapImageReceived(object sender, BitmapImageArgs e)
         {
-            OpenCvMatImageArgsLog data = new OpenCvMatImageArgsLog();
-            data.Mat = e.Mat;
+            BitmapImageArgsLog data = new BitmapImageArgsLog();
+            data.Bitmap = e.Bitmap;
             data.Descriptor = e.Descriptor;
             data.InstantInMs = DateTime.Now.Subtract(initialDateTime).TotalMilliseconds;
             //string json = JsonConvert.SerializeObject(data);
             //Log(json);
             //Methode 2
-            Log(data.Mat.d);
+            //Log(data.Mat.d);
         }
 
 

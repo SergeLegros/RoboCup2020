@@ -26,7 +26,7 @@ namespace ImageSaver
         }
 
         int subdivision = 0;
-        public void OnSaveCVMatImage(object sender, OpenCvMatImageArgs e)
+        public void OnSaveBitmapImage(object sender, BitmapImageArgs e)
         {
             subdivision++;
             if (subdivision == 120)
@@ -39,7 +39,7 @@ namespace ImageSaver
                     Directory.CreateDirectory(@"Images\");
                 }
                 // Create a Bitmap object based on a BMP file.
-                myBitmap = new Bitmap(e.Mat.Bitmap);
+                myBitmap = new Bitmap(e.Bitmap);
 
                 // Get an ImageCodecInfo object that represents the JPEG codec.
                 myImageCodecInfo = GetEncoderInfo("image/jpeg");
