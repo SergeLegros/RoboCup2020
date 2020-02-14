@@ -110,7 +110,6 @@ namespace RobotMonitor
         {
             if (!Dispatcher.CheckAccess())
             {
-
                 Dispatcher.BeginInvoke(new Action(delegate ()
                 {
                     DisplayBitmapImage(sender, e);
@@ -144,7 +143,7 @@ namespace RobotMonitor
                     imageCamera4.Source = BitmapToImageSource(image);
                     break;
                 default:
-                    imageCamera4.Source = BitmapToImageSource(image);
+                    //imageCamera4.Source = BitmapToImageSource(image);
                     break;
             }
 

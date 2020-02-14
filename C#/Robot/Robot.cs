@@ -100,9 +100,8 @@ namespace Robot
         }
         #endregion
 
-        static RobotMode robotMode = RobotMode.Standard;
+        static RobotMode robotMode = RobotMode.Acquisition;
 
-        static bool usingSimulatedCamera = true;
         static bool usingPhysicalSimulator = true;
         static bool usingXBoxController = false;
         static bool usingLidar = true;
@@ -250,7 +249,7 @@ namespace Robot
 
             if (usingYolo)
             {
-                yoloDetector = new YoloObjectDetector.YoloObjectDetector(false);            //Instancie un detecteur avec un Wrappeur Yolo utilisant le GPUif (usingYolo)
+                yoloDetector = new YoloObjectDetector.YoloObjectDetector(false);            //Instancie un detecteur avec un Wrappeur Yolo utilisant le GPU(false) ou le CPU (true)
                 absolutePositionEstimator.OnBitmapImageProcessedEvent += yoloDetector.DetectAndLabel;        //On envoie l'image dewrappée dans le detecteur Yolo, et on effectue la detection avec les poids UTLN                
                 //yoloDetector.OnYoloImageProcessedAndLabelled_LabelEvent += TODO;       //Permet d'afficher du txt dans la console camera
             }
@@ -260,8 +259,8 @@ namespace Robot
             //    StartRobotInterface();
             if (usingCameraInterface)
                 StartCameraInterface();
-            //if (usingLogReplay)
-            //    StartReplayNavigatorInterface();
+            if (usingLogReplay)
+                StartReplayNavigatorInterface();
 
             //Démarrage du logger si besoin
             if (usingLogging)
@@ -511,7 +510,7 @@ namespace Robot
 
             if (usingLogReplay)
             {
-                //logReplay.OnCameraImageEvent += ConsoleCamera.DisplayOpenCvMatImage;                
+                logReplay.OnCameraImageEvent += ConsoleCamera.DisplayBitmapImage;                
             }
             absolutePositionEstimator.OnBitmapImageProcessedEvent += ConsoleCamera.DisplayBitmapImage;
             if (usingYolo)
