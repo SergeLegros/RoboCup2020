@@ -100,7 +100,7 @@ namespace Robot
         }
         #endregion
 
-        static RobotMode robotMode = RobotMode.Acquisition;
+        static RobotMode robotMode = RobotMode.Standard;
 
         static bool usingPhysicalSimulator = true;
         static bool usingXBoxController = false;
@@ -255,8 +255,8 @@ namespace Robot
             }
 
             //Démarrage des interface de visualisation
-            //if (usingRobotInterface)
-            //    StartRobotInterface();
+            if (usingRobotInterface)
+                StartRobotInterface();
             if (usingCameraInterface)
                 StartCameraInterface();
             if (usingLogReplay)
