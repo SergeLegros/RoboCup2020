@@ -16,6 +16,7 @@ using System.Threading;
 using static HerkulexManagerNS.HerkulexEventArgs;
 using RefereeBoxAdapter;
 using HerkulexManagerNS;
+using Amplifier;
 
 namespace StrategyManager
 {
@@ -503,8 +504,10 @@ namespace StrategyManager
             double optimizedAreaSize;
             PointD OptimalPosition = new PointD(0, 0);
             PointD OptimalPosInBaseHeatMapCoordinates = heatMap.GetBaseHeatMapPosFromFieldCoordinates(0, 0);
-            
-            ParallelCalculateHeatMap(heatMap.BaseHeatMapData, heatMap.nbCellInBaseHeatMapWidth, heatMap.nbCellInBaseHeatMapHeight, (float)heatMap.FieldLength, (float)heatMap.FieldHeight, (float)robotDestination.X, (float)robotDestination.Y);
+            GPUCalculateHeatMap(heatMap.BaseHeatMapData, heatMap.nbCellInBaseHeatMapWidth, heatMap.nbCellInBaseHeatMapHeight, (float)heatMap.FieldLength, (float)heatMap.FieldHeight, (float)robotDestination.X, (float)robotDestination.Y);
+
+
+            //ParallelCalculateHeatMap(heatMap.BaseHeatMapData, heatMap.nbCellInBaseHeatMapWidth, heatMap.nbCellInBaseHeatMapHeight, (float)heatMap.FieldLength, (float)heatMap.FieldHeight, (float)robotDestination.X, (float)robotDestination.Y);
             //gpuDll.GpuGenerateHeatMap("GPU_DLL_CUDA.dll", heatMap.BaseHeatMapData, heatMap.nbCellInBaseHeatMapWidth, heatMap.nbCellInBaseHeatMapHeight, (float)heatMap.FieldLength, (float)heatMap.FieldHeight, (float)robotDestination.X, (float)robotDestination.Y);
             //ParallelCalculateHeatMap(heatMap.BaseHeatMapData, heatMap.nbCellInBaseHeatMapWidth, heatMap.nbCellInBaseHeatMapHeight, (float)heatMap.FieldLength, (float)heatMap.FieldHeight, (float)robotDestination.X, (float)robotDestination.Y);
 
@@ -670,6 +673,34 @@ namespace StrategyManager
                 }
             });
         }
+        #region GPU stuff
+        public void GPUCalculateHeatMap(double[,] _heatMap,
+            int _width, int _height,
+            float _widthTerrain, float _heightTerrain, 
+            float _destinationX, float _destinationY)
+        {
+            //Create instance of OpenCL compiler
+            var compiler = new OpenCLCompiler();
+            //Select a default device
+            compiler.UseDevice(0);
+            //Compile the sample kernel
+            compiler.CompileKernel(typeof(HeatMapKernel));
+            //Get the execution engine
+            var exec = compiler.GetExec();
+            //Create variable a, b and r
+            var heatMap = new XArray(_heatMap);
+            var width = new XArray(new int[] { _width });
+            var height = new XArray(new int[] { _height });
+            var widthTerrain = new XArray(new float[] { _widthTerrain });
+            var heightTerrain = new XArray(new float[] { _heightTerrain });
+            var destinationX = new XArray(new float[] { _destinationX });
+            var destinationY = new XArray(new float[] { _destinationY });
+            //Execute HeatMap kernel method
+            exec.ParallelCalculateHeatMap(heatMap, width, height, widthTerrain, heightTerrain, destinationX, destinationY);
+            var _heatmap = heatMap.ToArray();
+            compiler.Dispose();
+        }
+        #endregion
 
         double EvaluateStrategyCostFunction(PointD destination, PointD fieldPos)
         {
