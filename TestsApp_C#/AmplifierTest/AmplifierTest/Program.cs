@@ -11,27 +11,29 @@ namespace AmplifierTest
     class Program
     {
         static OpenCLCompiler Compiler = new OpenCLCompiler();
+        static dynamic exec;
         static void Main(string[] args)
         {
-            Console.WriteLine("\n----List Devices----");
+            WriteLine("\n----List Devices----", ConsoleColor.Yellow);
             foreach (var item in Compiler.Devices)
             {
-                Console.WriteLine(item);
+                WriteLine(item.ToString(), ConsoleColor.Green);
             }
             Write("GPU Number : ", ConsoleColor.Yellow);
             var key = Console.ReadKey();
             WriteLine();
             Compiler.UseDevice(int.Parse(key.KeyChar.ToString()));
             Compiler.CompileKernel(typeof(MyFirstKernel));
+            exec = Compiler.GetExec();
             WriteLine("\n----List Kernels----", ConsoleColor.Yellow);
             foreach (var item in Compiler.Kernels)
             {
                 WriteLine(item, ConsoleColor.Green);
             }
-            //WriteLine("Execute Add1 :");
-            //ExecuteAdd1();
-            //WriteLine("\n\nExecute Matrix :");
-            //ExecuteMatrix();
+            WriteLine("Execute Add1 :");
+            ExecuteAdd1();
+            WriteLine("\n\nExecute Matrix :");
+            ExecuteMatrix();
 
             WriteLine("\n\nExecute HeatMap on CPU basic:");
             double[,] heatMap = new double[22, 33];
@@ -60,7 +62,6 @@ namespace AmplifierTest
             var xXArray = new XArray(new int[1] { 0 });
             var yXArray = new XArray(new int[1] { 0 });
             WriteLine("Get execution...", ConsoleColor.Blue);
-            var exec = Compiler.GetExec();
             WriteLine("Execute...", ConsoleColor.Blue);
             //Parallel.For(0, height, y =>
             for (int y = 0; y < height; y++)
@@ -118,7 +119,7 @@ namespace AmplifierTest
             var testX = new XArray(new double[1]);
             var testY = new XArray(new double[1]);
             WriteLine("Get execution...", ConsoleColor.Blue);
-            var exec = Compiler.GetExec();
+            //var exec = Compiler.GetExec();
             WriteLine("Execute...", ConsoleColor.Blue);
             exec.Matrix(testX, testY);
             WriteLine("Get result...", ConsoleColor.Blue);
@@ -140,7 +141,7 @@ namespace AmplifierTest
             var test = new XArray(new int[] { 1 });
             string originalValue = test[0].ToString();
             WriteLine("Get execution...", ConsoleColor.Blue);
-            var exec = Compiler.GetExec();
+            //var exec = Compiler.GetExec();
             WriteLine("Execute...", ConsoleColor.Blue);
             exec.Add1(test);
             WriteLine("Get result...", ConsoleColor.Blue);

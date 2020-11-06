@@ -38,7 +38,7 @@ namespace AmplifierTest
             float destYInHeatmap = (float)((float)destinationY[indexGpu] / heightTerrain[indexGpu] + 0.5) * (height[indexGpu] - 1);  //-1 car on a augmenté la taille de 1 pour avoir une figure symétrique
 
             float normalizer = height[indexGpu];
-            float calculation = 1 - sqrt((destXInHeatmap - x[indexGpu]) * (destXInHeatmap - x[indexGpu]) + (destYInHeatmap - y[indexGpu]) * (destYInHeatmap - y[indexGpu])) / normalizer;
+            float calculation = 1 - rsqrt((destXInHeatmap - x[indexGpu]) * (destXInHeatmap - x[indexGpu]) + (destYInHeatmap - y[indexGpu]) * (destYInHeatmap - y[indexGpu])) / normalizer;
             if (calculation > 0)
                 resCalculate[indexGpu] = calculation;
             else
