@@ -24,5 +24,25 @@ namespace AmplifierTest
             x[indexGpu]++;
             y[indexGpu] += 2;
         }
+
+        [OpenCLKernel]
+        void HeatMapCalculator([Global] double[] resCalculate,
+            [Global] int[] width, [Global] int[] height,
+            [Global] float[] widthTerrain, [Global] float[] heightTerrain,
+            [Global] float[] destinationX, [Global] float[] destinationY,
+            [Global] int[] x, [Global] int[] y)
+        {
+            int indexGpu = get_global_id(0);
+
+            float destXInHeatmap = (float)((float)destinationX[indexGpu] / widthTerrain[indexGpu] + 0.5) * (width[indexGpu] - 1);  //-1 car on a augmenté la taille de 1 pour avoir une figure symétrique
+            float destYInHeatmap = (float)((float)destinationY[indexGpu] / heightTerrain[indexGpu] + 0.5) * (height[indexGpu] - 1);  //-1 car on a augmenté la taille de 1 pour avoir une figure symétrique
+
+            float normalizer = height[indexGpu];
+            float calculation = 1 - sqrt((destXInHeatmap - x[indexGpu]) * (destXInHeatmap - x[indexGpu]) + (destYInHeatmap - y[indexGpu]) * (destYInHeatmap - y[indexGpu])) / normalizer;
+            if (calculation > 0)
+                resCalculate[indexGpu] = calculation;
+            else
+                resCalculate[indexGpu] = 0;
+        }
     }
 }

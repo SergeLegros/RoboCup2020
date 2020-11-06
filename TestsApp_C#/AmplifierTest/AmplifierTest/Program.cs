@@ -13,7 +13,7 @@ namespace AmplifierTest
         static OpenCLCompiler Compiler = new OpenCLCompiler();
         static void Main(string[] args)
         {
-            Console.WriteLine("\nList Devices----");
+            Console.WriteLine("\n----List Devices----");
             foreach (var item in Compiler.Devices)
             {
                 Console.WriteLine(item);
@@ -23,7 +23,7 @@ namespace AmplifierTest
             WriteLine();
             Compiler.UseDevice(int.Parse(key.KeyChar.ToString()));
             Compiler.CompileKernel(typeof(MyFirstKernel));
-            WriteLine("\nList Kernels", ConsoleColor.Yellow);
+            WriteLine("\n----List Kernels----", ConsoleColor.Yellow);
             foreach (var item in Compiler.Kernels)
             {
                 WriteLine(item, ConsoleColor.Green);
@@ -32,7 +32,53 @@ namespace AmplifierTest
             ExecuteAdd1();
             WriteLine("\n\nExecute Matrix :");
             ExecuteMatrix();
+            WriteLine("\n\nExecute HeatMap :");
+            double[,] heatMap = new double[22, 33];
+            ExecuteHeatMap(heatMap, 33,22,3,2,0,0);
             WriteLine("Press any key to close",ConsoleColor.Red, true);
+        }
+
+        static void ExecuteHeatMap(double[,] heatMap, int width, int height,
+            float widthTerrain, float heightTerrain, float destinationX, float destinationY)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            var resCalculate = new XArray(new double[1]);
+            var widthXArray = new XArray(new int[1] { width });
+            var heightXArray = new XArray(new int[1] { height });
+            var widthTerrainXArray = new XArray(new float[1] { widthTerrain });
+            var heightTerrainXArray = new XArray(new float[1] { heightTerrain });
+            var destinationXXArray = new XArray(new float[1] { destinationX });
+            var destinationYXArray = new XArray(new float[1] { destinationY });
+            var xXArray = new XArray(new int[1] { 0 });
+            var yXArray = new XArray(new int[1] { 0 });
+            WriteLine("Get execution...", ConsoleColor.Blue);
+            var exec = Compiler.GetExec();
+            WriteLine("Execute...", ConsoleColor.Blue);
+            //Parallel.For(0, height, y =>
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    //Calcul de la fonction de cout de stratégie
+                    xXArray[0] = x;
+                    yXArray[0] = y;
+                    exec.HeatMapCalculator(resCalculate,
+                        widthXArray, heightXArray,
+                        widthTerrainXArray, heightTerrainXArray,
+                        destinationXXArray, destinationYXArray,
+                        widthXArray, widthXArray);
+                    heatMap[0, 0] = resCalculate[0];
+                }
+            }
+            WriteLine("Get result...", ConsoleColor.Blue);
+            sw.Stop();
+            //string resultXString = resultX.GetValue(0).ToString();
+            //string resultYString = resultY.GetValue(0).ToString();
+            //WriteLine("Result X : " + resultXString, ConsoleColor.Green);
+            //WriteLine("Result Y : " + resultYString, ConsoleColor.Green);
+            WriteLine("Process Time : " + sw.ElapsedMilliseconds + "ms", ConsoleColor.Gray);
+            sw.Reset();
         }
 
         static void ExecuteMatrix()
