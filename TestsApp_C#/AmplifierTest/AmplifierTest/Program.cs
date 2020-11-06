@@ -75,7 +75,7 @@ namespace AmplifierTest
                         widthXArray, heightXArray,
                         widthTerrainXArray, heightTerrainXArray,
                         destinationXXArray, destinationYXArray,
-                        widthXArray, widthXArray);
+                        xXArray, yXArray);
                     heatMap[y, x] = resCalculate[0];
                 }
             }
