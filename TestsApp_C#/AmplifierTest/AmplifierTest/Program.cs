@@ -28,13 +28,20 @@ namespace AmplifierTest
             {
                 WriteLine(item, ConsoleColor.Green);
             }
-            WriteLine("Execute Add1 :");
-            ExecuteAdd1();
-            WriteLine("\n\nExecute Matrix :");
-            ExecuteMatrix();
-            WriteLine("\n\nExecute HeatMap :");
+            //WriteLine("Execute Add1 :");
+            //ExecuteAdd1();
+            //WriteLine("\n\nExecute Matrix :");
+            //ExecuteMatrix();
+
+            WriteLine("\n\nExecute HeatMap on CPU basic:");
             double[,] heatMap = new double[22, 33];
+            ExecuteHeatMapBasic(heatMap, 33, 22, 3, 2, 0, 0);
+
+            WriteLine("\n\nExecute HeatMap :");
+            heatMap = new double[22, 33];
             ExecuteHeatMap(heatMap, 33,22,3,2,0,0);
+
+
             WriteLine("Press any key to close",ConsoleColor.Red, true);
         }
 
@@ -68,7 +75,7 @@ namespace AmplifierTest
                         widthTerrainXArray, heightTerrainXArray,
                         destinationXXArray, destinationYXArray,
                         widthXArray, widthXArray);
-                    heatMap[0, 0] = resCalculate[0];
+                    heatMap[y, x] = resCalculate[0];
                 }
             }
             WriteLine("Get result...", ConsoleColor.Blue);
@@ -77,6 +84,29 @@ namespace AmplifierTest
             //string resultYString = resultY.GetValue(0).ToString();
             //WriteLine("Result X : " + resultXString, ConsoleColor.Green);
             //WriteLine("Result Y : " + resultYString, ConsoleColor.Green);
+            WriteLine("Process Time : " + sw.ElapsedMilliseconds + "ms", ConsoleColor.Gray);
+            sw.Reset();
+        }
+
+        static void ExecuteHeatMapBasic(double[,] heatMap, int width, int height,
+            float widthTerrain, float heightTerrain, float destinationX, float destinationY)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            float destXInHeatmap = (float)((float)destinationX / widthTerrain + 0.5) * (width - 1);  //-1 car on a augmenté la taille de 1 pour avoir une figure symétrique
+            float destYInHeatmap = (float)((float)destinationY / heightTerrain + 0.5) * (height - 1);  //-1 car on a augmenté la taille de 1 pour avoir une figure symétrique
+
+            float normalizer = height;
+
+            Parallel.For(0, height, y =>
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    //Calcul de la fonction de cout de stratégie
+                    heatMap[y, x] = Math.Max(0, 1 - Math.Sqrt((destXInHeatmap - x) * (destXInHeatmap - x) + (destYInHeatmap - y) * (destYInHeatmap - y)) / normalizer);
+                }
+            });
+            sw.Stop();
             WriteLine("Process Time : " + sw.ElapsedMilliseconds + "ms", ConsoleColor.Gray);
             sw.Reset();
         }
