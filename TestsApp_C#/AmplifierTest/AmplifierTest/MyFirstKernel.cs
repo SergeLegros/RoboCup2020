@@ -18,6 +18,16 @@ namespace AmplifierTest
         }
 
         [OpenCLKernel]
+        void SimpleFor([Global, Output] double[] a, [Global, Input] int[] iter)
+        {
+            int indexGpu = get_global_id(0);
+            for (int i = 0; i < iter[indexGpu]; i++)
+            {
+                a[indexGpu] += rsqrt(a[indexGpu] * a[indexGpu] + 12.5) / 1250.0;
+            }
+        }
+
+        [OpenCLKernel]
         void Matrix([Global] double[] x, [Global] double[] y)
         {
             int indexGpu = get_global_id(0);

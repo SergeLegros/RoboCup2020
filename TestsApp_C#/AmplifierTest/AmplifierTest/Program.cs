@@ -19,34 +19,49 @@ namespace AmplifierTest
             {
                 WriteLine(item.ToString(), ConsoleColor.Green);
             }
-            Write("GPU Number : ", ConsoleColor.Yellow);
-            var key = Console.ReadKey();
-            WriteLine();
-            Compiler.UseDevice(int.Parse(key.KeyChar.ToString()));
+            //Write("GPU Number : ", ConsoleColor.Yellow);
+            //var key = Console.ReadKey();
+            //WriteLine();
+            //Compiler.UseDevice(int.Parse(key.KeyChar.ToString()));
+            //exec = Compiler.GetExec();
+            Compiler.UseDevice(0);
             Compiler.CompileKernel(typeof(MyFirstKernel));
-            exec = Compiler.GetExec();
             WriteLine("\n----List Kernels----", ConsoleColor.Yellow);
             foreach (var item in Compiler.Kernels)
             {
                 WriteLine(item, ConsoleColor.Green);
             }
-            WriteLine("Execute Add1 :");
-            ExecuteAdd1();
-            WriteLine("\n\nExecute Matrix :");
-            ExecuteMatrix();
+            WriteLine();
+            WriteLine();
+            foreach (var item in Compiler.Devices)
+            {
+                Compiler.UseDevice(item.ID);
+                Compiler.CompileKernel(typeof(MyFirstKernel));
+                exec = Compiler.GetExec();
+                WriteLine("Executed on device : " + item.ToString(), ConsoleColor.Red);
+                //WriteLine("Execute Add1 :", ConsoleColor.Yellow);
+                //ExecuteAdd1();
 
-            WriteLine("\n\nExecute HeatMap on CPU basic:");
-            double[,] heatMap = new double[22, 33];
-            ExecuteHeatMapBasic(heatMap, 33, 22, 3, 2, 0, 0);
+                //WriteLine("\n\nExecute Matrix :", ConsoleColor.Yellow);
+                //ExecuteMatrix();
 
-            //WriteLine("\n\nExecute HeatMap :");
-            //heatMap = new double[22, 33];
-            //ExecuteHeatMap(heatMap, 33,22,3,2,0,0);
+                WriteLine("Execute Simple For :", ConsoleColor.Yellow);
+                ExecuteSimpeFor(1000000);
+                WriteLine();
+                WriteLine();
 
-            WriteLine("\n\nExecute Full HeatMap :");
-            heatMap = new double[22, 33];
-            ExecuteFullHeatMap(heatMap, 33, 22, 3, 2, 0, 0);
+                //WriteLine("\n\nExecute HeatMap on CPU basic:", ConsoleColor.Yellow);
+                //double[,] heatMap = new double[22, 33];
+                //ExecuteHeatMapBasic(heatMap, 33, 22, 3, 2, 0, 0);
 
+                //WriteLine("\n\nExecute HeatMap :", ConsoleColor.Yellow);
+                //heatMap = new double[22, 33];
+                //ExecuteHeatMap(heatMap, 33,22,3,2,0,0);
+
+                //WriteLine("\n\nExecute Full HeatMap :", ConsoleColor.Yellow);
+                //heatMap = new double[22, 33];
+                //ExecuteFullHeatMap(heatMap, 33, 22, 3, 2, 0, 0);
+            }
 
             Compiler.Dispose();
             WriteLine("Press any key to close",ConsoleColor.Red, true);
@@ -168,6 +183,25 @@ namespace AmplifierTest
             string resultYString = resultY.GetValue(0).ToString();
             WriteLine("Result X : " + resultXString, ConsoleColor.Green);
             WriteLine("Result Y : " + resultYString, ConsoleColor.Green);
+            WriteLine("Process Time : " + sw.ElapsedMilliseconds + "ms", ConsoleColor.Gray);
+            sw.Reset();
+        }
+
+        static void ExecuteSimpeFor(int iterNb)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            var value = new XArray(new double[1], Direction.Output);
+            var iterationNb = new XArray(new int[1] { iterNb }, Direction.Input);
+            WriteLine("Get execution...", ConsoleColor.Blue);
+            //var exec = Compiler.GetExec();
+            WriteLine("Execute...", ConsoleColor.Blue);
+            exec.SimpleFor(value, iterationNb);
+            WriteLine("Get result...", ConsoleColor.Blue);
+            var result = value.ToArray();
+            sw.Stop();
+            string resultXString = result.GetValue(0).ToString();
+            WriteLine("Result : " + resultXString, ConsoleColor.Green);
             WriteLine("Process Time : " + sw.ElapsedMilliseconds + "ms", ConsoleColor.Gray);
             sw.Reset();
         }
